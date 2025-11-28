@@ -108,7 +108,7 @@ These compound acquisition functions are simply balanced in exactly the same rat
 ### Multi-fidelities
 We can either sample from one simulation fidelity or take into account all 4 and estimate cost and numerical stability of each fidelity for improved efficiency. The simulation cost can be estimated and iteratively refined by taking previous results and intuition about the inherent cost and stability of the simulations (noted down above). 
 
-The fidelities are **NOT** linearly related in general. But, for some given fluid flow, a linear relationship should hold. So the join-Gaussian property will be preserved for specified fluid flows. Equally, small variations in fluid flow, especially for calm fluids should be roughly linearly related.
+The fidelities are **NOT** linearly related in general. But, for a given fluid flow, a linear relationship should hold proved the hull shape is not super weird. So the join-Gaussian property will be preserved for specified fluid flows. Equally, small variations in fluid flow, especially for calm fluids should be roughly linearly related.
 
 ## Contrained Bayesian Optimisation of the Gaussian Process
 Optimise the hull parameters to maximise the integral of the output metric over varying fluid flows. The fluid flows to consider could just be determined by the user (i.e. a 'calm' scenario vs a 'white water rafting' scenario)
