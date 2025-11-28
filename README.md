@@ -2,14 +2,14 @@
 Efficiently optimising a kayak hull under constant fluid flows for a customisable compound metric assessing hydrodynamicity, stability, and buoyancy using Gaussian Processes. 
 
 ## Method
-### Inputs
+### User Inputs
 - Hull Parameter Constraints
 - Fluid Flow Direction
 - Fluid Flow Speed (by Galilean Relativity, this theoretically accounts also for the Kayak speed)
 - Weight of the Kayaker
 
 ### Outputs
-Optimised hull parameters maximising the quality of the hull by a compound metric taking into account:
+**Optimised hull parameters** maximising the quality of the hull by a compound metric taking into account:
 #### Hydrodynamicity:
 - Drag opposite the forward motion of the hull
 #### Stability:
@@ -97,6 +97,7 @@ Differing acquisition functions make sense for each part of the compound metric,
 - Integral of the stability curve up to the tipping point _(force required to capsize from flat)_
 - Maximum of the stability curve _(point of diminishing stability)_
 - Positive root of the stability curve _(tipping point)_
+- Gradient of the stability curve at zero _(stiffness)_
 - Integral of the hydrodynamic foward drag weighted by small angles heel angle between up to the point of diminishing stability _(total drag over 'realistic' heel angles)_
   
 Note that _reserve buoyancy_ is modelled as just a constant, we don't need to sample the functions.
@@ -111,7 +112,7 @@ We can either sample from one simulation fidelity or take into account all 4 and
 The fidelities are **NOT** linearly related in general. But, for a given fluid flow, a linear relationship should hold proved the hull shape is not super weird. So the join-Gaussian property will be preserved for specified fluid flows. Equally, small variations in fluid flow, especially for calm fluids should be roughly linearly related.
 
 ## Contrained Bayesian Optimisation of the Gaussian Process
-Optimise the hull parameters to maximise the integral of the output metric over varying fluid flows. The fluid flows to consider could just be determined by the user (i.e. a 'calm' scenario vs a 'white water rafting' scenario)
+Optimise the hull parameters under the input constraints to maximise the output metric for the given fluid flow (and kayaker weight). The fluid flows to consider could just be determined by the user (i.e. a 'calm' scenario vs a 'white water rafting' scenario).
 
 **TODO**
 
