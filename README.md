@@ -31,7 +31,7 @@ TODO
 
 All work from a **mesh** approximation of the hull, with reserve buoyancy calculated directly by the analytic method.
 
-The hybrid and dynamic approaches are theoretically both as _accurate / high fidelity_ as each other, but differ greatly in terms of numerical stability and cost. The acquisition functions are balanced taking to samples from multiple fidelities with based on expected cost and numerical stability.
+The hybrid and dynamic approaches are theoretically both as _accurate / high fidelity_ as each other, but differ greatly in terms of numerical stability and cost. If doing a multi-fidelity model, the multi-fidelity acquisition function can be balanced based on expected **cost** and **numerical stability**.
 
 ### Analytic
 Ignores fluid flow and calculates:
