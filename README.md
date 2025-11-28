@@ -7,6 +7,7 @@ Efficiently optimising a kayak hull under constant fluid flows for a customisabl
 - Fluid Flow Direction
 - Fluid Flow Speed (by Galilean Relativity, this theoretically accounts also for the Kayak speed)
 - Weight of the Kayaker
+_Note_: For simplicity we are taking fluid flow and kayaker weight as **constant**, reducing the input dimensions used during acquisition and optimisation of the Gaussian Process.
 
 ### Outputs
 **Optimised hull parameters** maximising the quality of the hull by a compound metric taking into account:
