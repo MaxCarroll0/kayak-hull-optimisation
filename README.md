@@ -69,7 +69,7 @@ Iterating the static method.
 
 **Numerical Stability** compounds the possibility of non-convergence of draught (**i.e. oscillations**) with the inherent Static method instability. Setting hyperparameters carefully alleviates this.
 
-### Dynamic
+### (Optional) Dynamic
 A single _dynamic_ fluid simulation with interDyMFoam accounting for 6DoF transformations of the mesh in the fluid. i.e. like my6DoFFoam.
 
 1) Calculate the analytic results for some heel angle
