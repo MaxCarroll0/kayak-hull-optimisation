@@ -4,10 +4,11 @@ Efficiently optimising a kayak hull under constant fluid flows for a customisabl
 ## Method
 ### User Inputs
 - Hull Parameter Constraints
-- Fluid Flow Direction
-- Fluid Flow Speed (by Galilean Relativity, this theoretically accounts also for the Kayak speed)
+- Forward Speed
+- Weighting on sideways stability (i.e. how much do we care about stability when fluid flow is perpendicular to kayak direction)
+- Fluid Flow Speed
 - Weight of the Kayaker
-_Note_: For simplicity we are taking fluid flow and kayaker weight as **constant**, reducing the input dimensions used during acquisition and optimisation of the Gaussian Process.
+_Note_: For simplicity we are taking fluid flow speed and kayaker weight as **constant**, reducing the input dimensions used during acquisition and optimisation of the Gaussian Process.
 
 ### Outputs
 **Optimised hull parameters** maximising the quality of the hull by a compound metric taking into account:
@@ -99,13 +100,14 @@ One way to create an acquisition function on this is to run **two GPs** modellin
 ### Compount Acquisition Functions
 Splitting the GP in two (on the hydrodynamicity curve and stability curve) we can get more intuitive results and design more effect acquisition functions and kernels. But there is additional complexity on deciding how to effectively balance the multiple models.
 
-Differing acquisition functions make sense for each part of the compound metric, we wish to optimise all of the following over varying heel angles and fluid flows, each of which will have a *differing acquisition function*:
+Differing acquisition functions make sense for each part of the compound metric, we wish to optimise all of the following over varying heel angles, each of which will have a *differing acquisition function*:
 - Integral of the stability curve up to the tipping point _(force required to capsize from flat)_
 - Maximum of the stability curve _(point of diminishing stability)_
 - Positive root of the stability curve _(tipping point)_
 - Gradient of the stability curve at zero _(stiffness)_
 - Integral of the hydrodynamic foward drag weighted by small angles heel angle between up to the point of diminishing stability _(total drag over 'realistic' heel angles)_
-  
+Then, we wish to integrate each of the above over varying fluid directions, with respect to the weightings given by the user.
+
 Note that _reserve buoyancy_ is modelled as just a constant, we don't need to sample the functions.
 
 These compound acquisition functions are simply balanced in exactly the same ratios that output metric is composed of. i.e. if we care 50% about tipping point and 50% about hydrodynamicity, we would randomly sample 50% of the time from the tipping point acquisition functions and 50% of the time from the hydrodynamicity acquisition function.
@@ -118,7 +120,7 @@ We can either sample from one simulation fidelity or take into account all 4 and
 The fidelities are **NOT** linearly related in general. But, for a given fluid flow, a linear relationship should hold proved the hull shape is not super weird. So the join-Gaussian property will be preserved for specified fluid flows. Equally, small variations in fluid flow, especially for calm fluids should be roughly linearly related.
 
 ## Contrained Bayesian Optimisation of the Gaussian Process
-Optimise the hull parameters under the input constraints to maximise the output metric for the given fluid flow (and kayaker weight). The fluid flows to consider could just be determined by the user (i.e. a 'calm' scenario vs a 'white water rafting' scenario).
+Optimise the hull parameters under the input constraints to maximise the output metric for the given fluid flow (and kayaker weight). The fluid flow to consider are just be determined by the user (i.e. a 'calm' scenario vs a 'white water rafting' scenario).
 
 **TODO**
 
