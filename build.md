@@ -1,5 +1,6 @@
 # Build Instructions
 Ensure Python3, pip, and Just are installed. Use pip to install:
+- autopep8
 - PyFoam
 - numpy
 - matplotlib
