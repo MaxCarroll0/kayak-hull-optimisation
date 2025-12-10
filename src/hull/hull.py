@@ -3,6 +3,7 @@ Hull object, generated from hull parameters.
 Including mesh and all info required for simulation
 """
 
+import config
 from trimesh import Trimesh
 import trimesh
 from params import Params
@@ -63,21 +64,32 @@ class Hull:
   def generate_mesh(params: Params) -> Trimesh:
     return Trimesh() # TODO
 
+  # TODO: move to analytic.py / abstract to allow dynamic draught calculations
   @staticmethod
   def iterate_draught(mesh: Trimesh) -> float:
     """
     Iterate various water levels (draught) and calculate displacement.
     Returns the draught iterating until displacement = weight
     """
-    return 0 # TODO
+    diff = float("inf")
+    draught = mesh.center_mass[2]
+    while abs(diff) > config.hyperparameters.buoyancy_threshold:
+      submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught])
+      # TODO: Count air into displacement
+      displacement = submerged.volume * config.constants.water_density
+      diff = mesh.mass - displacement
+      draught += abs(diff) / mesh.mass * (mesh.bounds[2][1 if draught > 0 else 0] - draught)
+    return draught
 
+  # TODO: move to analytic.py
   @staticmethod
   def calculate_centre_of_buoyancy(mesh: Trimesh, draught: float) -> Tuple[float, float, float]:
     """
     Calculate the centre of buoyancy for a given draught level.
     i.e. The centre of mass of the submerged portion.
     """
-    submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught])
+    submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
+    # TODO: Count air into displacement
     return vec3d_to_tuple(submerged.center_mass)
     
   def save_to_stl(self, filepath: str) -> None:
