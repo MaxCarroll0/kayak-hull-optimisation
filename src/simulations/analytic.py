@@ -7,21 +7,12 @@ from hull.hull import Hull
 import numpy as np
 import trimesh
 from trimesh import Trimesh, Scene
-from typing import Tuple, Any
+from typing import Tuple, Any, cast
 from simulations.params import Params
 from simulations.result import Result
 
 def _vec3d_to_tuple(vec: np.ndarray[Any, np.dtype[np.float64]]) -> Tuple[float, float, float]:
   return (vec[0], vec[1], vec[2])
-
-def _calculate_centre_of_buoyancy(mesh: Trimesh, draught: float) -> Tuple[float, float, float]:
-  """
-  Calculate the centre of buoyancy for a given draught level.
-  i.e. The centre of mass of the submerged portion.
-  """
-  submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
-  # TODO: Count air into displacement
-  return _vec3d_to_tuple(submerged.center_mass)
 
 def _iterate_draught(mesh: Trimesh) -> Tuple[int, float]:
   """
@@ -42,6 +33,22 @@ def _iterate_draught(mesh: Trimesh) -> Tuple[int, float]:
     draught += abs(diff) / mesh.mass * (mesh.bounds[2][1 if draught > 0 else 0] - draught)
   return loops, draught
 
+def _calculate_centre_of_buoyancy(mesh: Trimesh, draught: float) -> Tuple[float, float, float]:
+  """
+  Calculate the centre of buoyancy for a given draught level.
+  i.e. The centre of mass of the submerged portion.
+  """
+  submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
+  # TODO: Count air into displacement
+  return submerged.center_mas
+
+def _calculate_righting_moment(mesh: Trimesh, draught: float) -> float:
+  cob = _calculate_centre_of_buoyancy(mesh, draught)
+  righting_lever = cob - mesh.center_mass
+  gravity_force = mesh.mass * config.constants.gravity_on_earth * np.array([0,0,-1])
+  righting_moment = np.cross(righting_lever, gravity_force)
+  return cast(float, np.linalg.norm(righting_moment))
+
 def _draught_proportion(mesh: Trimesh, draught: float):
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
   unsubmerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,1], [0,0,draught], cap=True)
@@ -55,7 +62,7 @@ def run(hull: Hull, params: Params) -> Result:
   R = trimesh.transformations.rotation_matrix(params.heel, [1,0,0], hull.mesh.center_mass)
   rotated_mesh = hull.mesh.apply_transform(R)
   iterations, draught = _iterate_draught(rotated_mesh)
-  return Result(righting_moment = 0, # TODO
+  return Result(righting_moment = _calculate_righting_moment(rotated_mesh, draught),
                 draught_proportion = _draught_proportion(rotated_mesh, draught),
                 scene = _scene_draught(rotated_mesh, draught),
                 cost = config.hyperparameters.cost_analytic(iterations))
