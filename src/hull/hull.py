@@ -21,7 +21,6 @@ class Hull:
     """
     # Set unmodified params
     self.density: float = params.density
-    self.heel: float = params.heel
     
     # Generate Mesh
     if from_mesh is None:
@@ -57,3 +56,4 @@ class Hull:
     if self.mesh is None:
       raise ValueError("Mesh not generated")
     trimesh.Scene(self.mesh).show(viewer="gl")
+
