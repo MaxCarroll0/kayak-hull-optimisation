@@ -40,19 +40,9 @@ def _iterate_draught(hull: Hull) -> Tuple[int, float]:
     draught += abs(diff) / hull.mesh.mass * (hull.mesh.bounds[2][1 if draught > 0 else 0] - draught)
   return loops, draught
 
-def recalculate_properties(hull: Hull) -> None:
-  """
-  Recalculate properties derived from the mesh (bounds, weight, centre of mass, draught, etc.)
-  """
-  # Draught and buoyancy
-  iterations, draught = iterate_draught(hull)
-  centre_of_buoyancy = calculate_centre_of_buoyancy(hull, draught)
-
-def show_draught(hull: Hull, draught: float):
-  if hull.mesh is None:
-    raise ValueError("Mesh not generated")
+def _scene_draught(hull: Hull, draught: float):
   T = np.linalg.inv(trimesh.geometry.plane_transform(origin=[0,0,1], normal=[0,0,1]))
-  trimesh.Scene([hull.mesh, trimesh.path.path.creation.grid(side=2, transform=T)]).show()
+  trimesh.Scene([hull.mesh, trimesh.path.path.creation.grid(side=2, transform=T)])
 
 def run(hull, fluid_dir, fluid_flow, angle):
   return {"righting_moment":0.0, "drag":0.0, "cost":0.0}
