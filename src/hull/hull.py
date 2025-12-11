@@ -3,12 +3,11 @@ Hull object, generated from hull parameters.
 Including mesh and all info required for simulation
 """
 
-import config
+from ..config import *
 from trimesh import Trimesh
 import trimesh
-from params import Params
-from typing import Tuple, Any, Optional
-import numpy as np
+from .params import Params
+from typing import Optional
 
 class Hull:
   """
