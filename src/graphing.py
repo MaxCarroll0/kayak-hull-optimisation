@@ -9,7 +9,7 @@ def plot_RM(xs, ys):
     """
     def remove_discontinuities(ys):
         ys = np.asarray(ys).reshape(-1)
-        threshold = 10 * np.median(np.abs(np.diff(ys)))
+        threshold = 25 * np.median(np.abs(np.diff(ys)))
         jumps = np.abs(np.diff(ys)) > threshold
         ys[1:][jumps] = np.nan
         return ys
@@ -28,6 +28,7 @@ def plot_RM(xs, ys):
     for idy, y in enumerate(ys_heel + ys_pitch + ys_yaw):
         if np.isnan(y):
             plt.axvline(xs[idy], color='red', linestyle=':', label=('Discontinuities (hull flooded)' if first else None))
+            first = False
     
     plt.xlabel("Heel angle (rad)")
     plt.ylabel("Righting Moment (Nm)")
