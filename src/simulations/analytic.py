@@ -43,12 +43,12 @@ def _calculate_centre_of_buoyancy(mesh: Trimesh, draught: float) -> Tuple[float,
   # TODO: Count air into displacement
   return submerged.center_mass
 
-def _calculate_righting_moment(mesh: Trimesh, draught: float) -> float:
+def _calculate_righting_moment(mesh: Trimesh, draught: float) -> Tuple[float, float, float]:
   cob = _calculate_centre_of_buoyancy(mesh, draught)
   righting_lever = cob - mesh.center_mass
   gravity_force = mesh.mass * config.constants.gravity_on_earth * np.array([0,0,-1])
   righting_moment = np.cross(righting_lever, gravity_force)
-  return cast(float, np.linalg.norm(righting_moment))
+  return cast(Tuple[float, float, float], righting_moment)
 
 def _draught_proportion(mesh: Trimesh, draught: float):
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
