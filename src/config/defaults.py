@@ -4,7 +4,7 @@ Default values for user inputs. e.g. hull constraints
 from ..hull import Hull
 import trimesh
 
-kayak_density = 1500 # kg/m^3
+kayak_density = 900 # kg/m^3
 
 # A rectangular bathtub-shaped hull
 def _bathtub():
