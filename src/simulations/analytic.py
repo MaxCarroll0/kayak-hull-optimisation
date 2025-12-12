@@ -10,45 +10,53 @@ from trimesh import Trimesh, Scene
 from typing import Tuple, Any, cast
 from .params import Params
 from .result import Result
-
-def _vec3d_to_tuple(vec: np.ndarray[Any, np.dtype[np.float64]]) -> Tuple[float, float, float]:
-  return (vec[0], vec[1], vec[2])
+from functools import reduce
+from scipy import optimize
 
 def _iterate_draught(mesh: Trimesh) -> Tuple[int, float]:
   """
   Iterate various water levels (draught) and calculate displacement.
   Returns the draught iterating until displacement = weight
   """
-  diff = float("inf")
-  draught = mesh.center_mass[2]
-  loops = 0
-  while abs(diff) > config.hyperparameters.buoyancy_threshold:
-    loops += 1
-    if loops > config.hyperparameters.buoyancy_max_iterations:
-      raise RuntimeError("Analytic draught calculation failed to converge")
-    submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
-    # TODO: Count air into displacement. temporarily double displacement to account for this
-    displacement = submerged.volume * config.constants.water_density
-    fake_displacement = 2 * displacement
-    diff = mesh.mass - fake_displacement
-    draught += abs(diff) / mesh.mass * (mesh.bounds[1 if diff> 0 else 0][2] - draught)
-  return loops, draught
+  def required_buoyancy(draught: float):
+    _, displacement = _calculate_centre_buoyancy_and_displacement(mesh, draught)
+    return mesh.mass - displacement
 
-def _calculate_centre_of_buoyancy(mesh: Trimesh, draught: float) -> Tuple[float, float, float]:
+  lower = mesh.bounds[0][2] + 0.001 # 1mm buffer
+  upper = mesh.bounds[1][2] - 0.001
+  draught, draught_result = optimize.bisect(required_buoyancy,
+                                  upper,
+                                  lower,
+                                  # TODO, parameterise draught_threshold based on hull?
+                                  xtol=config.hyperparameters.draught_threshold * (upper-lower),
+                                  maxiter=config.hyperparameters.draught_max_iterations,
+                                  disp=True,
+                                  full_output=True)
+  return draught_result.iterations, draught
+
+def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, draught: float) -> Tuple[Tuple[float, float, float], float]:
   """
   Calculate the centre of buoyancy for a given draught level.
-  i.e. The centre of mass of the submerged portion.
+  i.e. The centre of mass of the water displaced by the submerged portion and its air pockets.
   """
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
-  # TODO: Count air into displacement
-  return submerged.center_mass
+  water_box = trimesh.creation.box(bounds=[submerged.bounds[0]-0.1, submerged.bounds[1]+[0.1,0.1,0]])
+  # Calculate water/air meshes around the boat
+  water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh])
+  pockets = water_diff.split()  # Get all pockets
+  # Exactly ONE pocket corresponds to water, and it is the only pocket to contain points outside the submerged points
+  air_pockets = [pocket for pocket in pockets if not pocket.contains([submerged.bounds[0]*1.05])[0]]
+  water_displaced = air_pockets + [submerged]
+  # Note, all densities reset to 1 by previous operations
+  return tuple(trimesh.Scene(water_displaced).center_mass),\
+    reduce(lambda acc, m: m.volume + acc, water_displaced, 0) * config.constants.water_density
 
 def _calculate_righting_moment(mesh: Trimesh, draught: float) -> Tuple[float, float, float]:
-  cob = _calculate_centre_of_buoyancy(mesh, draught)
+  cob, _ = _calculate_centre_buoyancy_and_displacement(mesh, draught)
   righting_lever = cob - mesh.center_mass
   gravity_force = mesh.mass * config.constants.gravity_on_earth * np.array([0,0,-1])
   righting_moment = np.cross(righting_lever, gravity_force)
-  return cast(Tuple[float, float, float], righting_moment)
+  return tuple(righting_moment)
 
 def _draught_proportion(mesh: Trimesh, draught: float):
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
@@ -56,9 +64,11 @@ def _draught_proportion(mesh: Trimesh, draught: float):
   return unsubmerged.volume / (unsubmerged.volume + submerged.volume)
 
 def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
-  T = np.linalg.inv(trimesh.geometry.plane_transform(origin=[0,0,draught], normal=[0,0,1]))
-  axes = trimesh.creation.axis(origin_size=0.1, axis_length=0.5)
-  return trimesh.Scene([mesh, axes, trimesh.path.path.creation.grid(side=2, transform=T)])
+  submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
+  water_box = trimesh.creation.box(bounds=[submerged.bounds[0]+0.1, submerged.bounds[1]+[0.1,0.1,0]])
+  water_box._visual.face_colors = [0,255,240,50]
+  mesh._visual.face_colors = [255,0,0,255]
+  return trimesh.Scene([mesh, water_box])
 
 def run(hull: Hull, params: Params) -> Result:
   R = trimesh.transformations.rotation_matrix(params.heel, [1,0,0], hull.mesh.center_mass)
