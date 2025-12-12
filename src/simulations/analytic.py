@@ -24,9 +24,9 @@ def _iterate_draught(mesh: Trimesh) -> Tuple[int, float]:
     if loops > config.hyperparameters.buoyancy_max_iterations:
       raise RuntimeError("Analytic draught calculation failed to converge")
     _, displacement = _calculate_centre_buoyancy_and_displacement(mesh, draught)
-    fake_displacement = 2 * displacement
-    diff = mesh.mass - fake_displacement
+    diff = mesh.mass - displacement
     draught += abs(diff) / mesh.mass * (mesh.bounds[1 if diff> 0 else 0][2] - draught)
+    draught = max(mesh.bounds[0][2]+0.001, min(mesh.bounds[1][2]-0.001, draught)) # clamp draught
   return loops, draught
 
 def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, draught: float) -> Tuple[Tuple[float, float, float], float]:
