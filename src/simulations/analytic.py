@@ -50,22 +50,6 @@ def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, draught: float) -
   return tuple(trimesh.Scene(water_displaced).center_mass),\
     reduce(lambda acc, m: m.volume + acc, water_displaced, 0) * config.constants.water_density
 
-def test(mesh: Trimesh, draught: float):
-  """
-  Calculate the centre of buoyancy for a given draught level.
-  i.e. The centre of mass of the water displaced by the submerged portion and its air pockets.
-  """
-  submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
-  water_box = trimesh.creation.box(bounds=[submerged.bounds[0]-0.1, submerged.bounds[1]+[0.1,0.1,0]])
-  # Calculate water/air meshes around the boat
-  water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh])
-  pockets = water_diff.split()  # Get all pockets
-  # Exactly ONE pocket corresponds to water, and it is the only pocket to contain points outside the submerged points
-  air_pockets = [pocket for pocket in pockets if not pocket.contains([submerged.bounds[0]*1.05])[0]]
-  water_displaced = air_pockets + [submerged]
-  # Note, all densities reset to 1 by previous operations
-  return {"submerged": submerged, "pockets": pockets, "air_pockets": air_pockets, "cob": trimesh.Scene(water_displaced).center_mass, "displacement": reduce(lambda acc, m: m.volume + acc, water_displaced, 0) * config.constants.water_density}
-
 def _calculate_righting_moment(mesh: Trimesh, draught: float) -> Tuple[float, float, float]:
   cob, _ = _calculate_centre_buoyancy_and_displacement(mesh, draught)
   righting_lever = cob - mesh.center_mass

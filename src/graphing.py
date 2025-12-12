@@ -8,8 +8,6 @@ def plot_RM(xs, ys):
     y: 3d righting moments
     """
     plt.figure(figsize=(8,5))
-    print(xs)
-    print(ys)
     plt.plot(xs, [y.righting_moment_heel() for y in ys], label="Heel righting moment")
     plt.plot(xs, [y.righting_moment_pitch() for y in ys], label="Pitch righting moment")
     plt.plot(xs, [y.righting_moment_yaw() for y in ys], label="Heel righting moment")
