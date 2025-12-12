@@ -51,9 +51,11 @@ def _draught_proportion(mesh: Trimesh, draught: float):
   return unsubmerged.volume / (unsubmerged.volume + submerged.volume)
 
 def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
-  T = np.linalg.inv(trimesh.geometry.plane_transform(origin=[0,0,draught], normal=[0,0,1]))
-  axes = trimesh.creation.axis(origin_size=0.1, axis_length=0.5)
-  return trimesh.Scene([mesh, axes, trimesh.path.path.creation.grid(side=2, transform=T)])
+  submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
+  water_box = trimesh.creation.box(bounds=[submerged.bounds[0]*1.1, submerged.bounds[1]*[1.1,1.1,1]])
+  water_box._visual.face_colors = [0,255,240,50]
+  mesh._visual.face_colors = [255,0,0,255]
+  return trimesh.Scene([mesh, water_box])
 
 def run(hull: Hull, params: Params) -> Result:
   R = trimesh.transformations.rotation_matrix(params.heel, [1,0,0], hull.mesh.center_mass)
