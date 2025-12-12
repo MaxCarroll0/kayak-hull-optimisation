@@ -11,24 +11,26 @@ from typing import Tuple, Any, cast
 from .params import Params
 from .result import Result
 from functools import reduce
+from scipy import optimize
 
 def _iterate_draught(mesh: Trimesh) -> Tuple[int, float]:
   """
   Iterate various water levels (draught) and calculate displacement.
   Returns the draught iterating until displacement = weight
   """
-  diff = float("inf")
-  draught = mesh.center_mass[2]
-  loops = 0
-  while abs(diff) > config.hyperparameters.buoyancy_threshold:
-    loops += 1
-    if loops > config.hyperparameters.buoyancy_max_iterations:
-      raise RuntimeError("Analytic draught calculation failed to converge")
+  def required_buoyancy(draught: float):
     _, displacement = _calculate_centre_buoyancy_and_displacement(mesh, draught)
-    diff = mesh.mass - displacement
-    draught += abs(diff) / mesh.mass * (mesh.bounds[1 if diff> 0 else 0][2] - draught)
-    draught = max(mesh.bounds[0][2]+0.001, min(mesh.bounds[1][2]-0.001, draught)) # clamp draught
-  return loops, draught
+    return mesh.mass - displacement
+
+  draught, draught_result = optimize.bisect(required_buoyancy,\
+                                  mesh.bounds[0][2] + 0.001,\
+                                  mesh.bounds[1][2] - 0.001,\
+                                  xtol=0.001, # Config hyperparameter\
+                                  rtol=np.float64(config.hyperparameters.buoyancy_threshold),\
+                                  maxiter=config.hyperparameters.buoyancy_max_iterations,\
+                                  disp=True,\
+                                  full_output=True)
+  return draught_result.iterations, draught
 
 def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, draught: float) -> Tuple[Tuple[float, float, float], float]:
   """
