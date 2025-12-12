@@ -52,7 +52,7 @@ def _draught_proportion(mesh: Trimesh, draught: float):
 
 def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
-  water_box = trimesh.creation.box(bounds=[submerged.bounds[0]*1.1, submerged.bounds[1]*[1.1,1.1,1]])
+  water_box = trimesh.creation.box(bounds=[submerged.bounds[0]+0.1, submerged.bounds[1]+[0.1,0.1,0]])
   water_box._visual.face_colors = [0,255,240,50]
   mesh._visual.face_colors = [255,0,0,255]
   return trimesh.Scene([mesh, water_box])
