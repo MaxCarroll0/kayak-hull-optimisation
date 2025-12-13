@@ -1,0 +1,19 @@
+name: kayak-env
+channels:
+
+  - conda-forge
+  - defaults
+dependencies:
+  # Base Python, feel free to change shouldnt be anything to version specific
+  - python=3.11
+  
+  # Core stuff
+  - numpy
+  - matplotlib
+  
+
+  
+  # Packages not on conda
+  - pip:
+    - PyFoam
+    - autopep8
