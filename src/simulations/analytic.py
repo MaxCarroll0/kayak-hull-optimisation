@@ -12,6 +12,11 @@ from .params import Params
 from .result import Result
 from functools import reduce
 from scipy import optimize
+from .storage import ResultStorage
+
+
+
+storage = ResultStorage()
 
 def _iterate_draught(mesh: Trimesh) -> Tuple[int, float]:
   """
@@ -70,13 +75,20 @@ def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   mesh._visual.face_colors = [255,0,0,255]
   return trimesh.Scene([mesh, water_box])
 
-def run(hull: Hull, params: Params) -> Result:
+def run(hull: Hull, params: Params, use_cache: bool = True) -> Result:
+
   R = trimesh.transformations.rotation_matrix(params.heel, [1,0,0], hull.mesh.center_mass)
   rotated_mesh = hull.mesh.copy().apply_transform(R)
   iterations, draught = _iterate_draught(rotated_mesh)
-  return Result(righting_moment = _calculate_righting_moment(rotated_mesh, draught),
-                draught_proportion = _draught_proportion(rotated_mesh, draught),
-                scene = _scene_draught(rotated_mesh, draught),
-                cost = config.hyperparameters.cost_analytic(iterations))
+  new_result = Result(
+        righting_moment=_calculate_righting_moment(rotated_mesh, draught),
+        draught_proportion=_draught_proportion(rotated_mesh, draught),
+        scene=_scene_draught(rotated_mesh, draught),
+        cost=config.hyperparameters.cost_analytic(iterations)
+    )
+  if use_cache:
+        storage.store(new_result, params)
+  return new_result
+
 
 __all__ = [ "run" ]

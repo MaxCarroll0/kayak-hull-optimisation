@@ -1,6 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from trimesh import Scene
 from typing import Tuple
+
 
 @dataclass
 class Result:
@@ -10,6 +11,8 @@ class Result:
     scene - Trimesh.Scene: scene containing the tilted hull & waterline for viewing with scene.show()
     cost - float: Simulation cost (accounting for # of iterations, and discretisation). Note: does not account for (hardware-dependent) time taken to complete
     """
+
+
     righting_moment: Tuple[float, float, float]
     draught_proportion: float
     scene: Scene
@@ -18,3 +21,6 @@ class Result:
     def righting_moment_heel(self): return self.righting_moment[0]
     def righting_moment_pitch(self): return self.righting_moment[1]
     def righting_moment_yaw(self): return self.righting_moment[2]
+
+    def to_dict(self):
+        return asdict(self)

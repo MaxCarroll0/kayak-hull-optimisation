@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
 from . import *
+
 
 def plot_RM(xs, ys):
     """
@@ -46,3 +48,6 @@ def plot_simulation(run, hull, lower = -np.pi, upper = np.pi, resolution = 100):
     heel_angles = np.linspace(lower, upper, resolution)
     results = [run(hull, simulations.Params(heel=heel)) for heel in heel_angles]
     plot_RM(heel_angles, results)
+
+
+
