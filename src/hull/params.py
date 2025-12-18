@@ -6,7 +6,8 @@ class Params:
     Parameters defining a hull.
     Used to create a Hull object.
 
-    density - kg/m^3 (float)
+    density - kg/m^3 (float): density of hull material
+    hull_thickness - m (float): thickness of hull material
 
     length - m (float): overall hull length
     beam - m (float): max width of hull
@@ -17,11 +18,11 @@ class Params:
     rocker_bow - m (float): keel curvature at bow
     rocker_stern - m (float): keel curvature at stern
     rocker_position - float: position of minimum rocker along hull length (0.0=bow, 1.0=stern)
+    rocker_exponent - float: exponent controlling how banana-shaped the kayak is at each end
     """
 
     # Physical properties
     density: float
-    person_mass: float
     hull_thickness: float
 
     # global dimensions
@@ -36,3 +37,4 @@ class Params:
     rocker_bow: float
     rocker_stern: float
     rocker_position: float
+    rocker_exponent: float
