@@ -92,7 +92,7 @@ def apply_rocker_to_hull(mesh: Trimesh, length: float, rocker_bow: float, rocker
     x_coords = (vertices[:, 0] / length)  # normalized x-coordinates [0, 1]
     z_cords = vertices[:, 2]
 
-    modified_z = np.zeros_like(z_cords)
+    z_offsets = np.zeros_like(z_cords)
     is_bow_side = x_coords <= rocker_position
     is_stern_side = x_coords > rocker_position
 
@@ -101,16 +101,16 @@ def apply_rocker_to_hull(mesh: Trimesh, length: float, rocker_bow: float, rocker
         x_bow = x_coords[is_bow_side]
         pivot = max(rocker_position, 1e-6)
         rocker_bow_z = rocker_bow * (1 - (x_bow / pivot)) ** rocker_exponent
-        modified_z[is_bow_side] = rocker_bow_z
+        z_offsets[is_bow_side] = rocker_bow_z
 
     # Stern side rocker
     if np.any(is_stern_side):
         x_stern = x_coords[is_stern_side]
         remain_len = max(1.0 - rocker_position, 1e-6)
         rocker_stern_z = rocker_stern * ((x_stern - rocker_position) / remain_len) ** rocker_exponent
-        modified_z[is_stern_side] = rocker_stern_z
+        z_offsets[is_stern_side] = rocker_stern_z
 
-    vertices[:, 2] = z_cords + modified_z
+    vertices[:, 2] = z_cords + z_offsets
     mesh.vertices = vertices
     mesh.fix_normals()
 
