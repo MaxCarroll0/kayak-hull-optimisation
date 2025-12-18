@@ -7,6 +7,7 @@ from ..config import *
 from trimesh import Trimesh
 import trimesh
 from .params import Params
+from .generation import generate_simple_hull, apply_rocker_to_hull
 from typing import Optional
 
 class Hull:
@@ -20,21 +21,26 @@ class Hull:
     """
     # Set unmodified params
     self.density: float = params.density
-    self.person_mass: float = params.person_mass
     self.hull_thickness: float = params.hull_thickness
     
-    # Generate Mesh
     if from_mesh is None:
       self.mesh: Trimesh = Hull.generate_mesh(params)
     else:
       self.mesh = from_mesh
       self.mesh.density = params.density # Override mesh density with params density
+    
+    # Set derived properties
+    self.mass = self.mesh.area * self.hull_thickness * self.density
+    # Override mesh density so mesh.mass = volume * density equals our shell mass
+    self.mesh.density = self.mass / self.mesh.volume
+
+    # override center of mass to mimic as an empty hollow hull
+    min_z = self.mesh.bounds[0][2]
+    self.mesh.center_mass = [0.0, 0.0, min_z + (params.depth * 0.25)]
+
     if not self.mesh.is_watertight:
       # We must have a watertight hull mesh
       raise RuntimeError("Generated/Provided Hull contains Holes")
-
-    # Set derived params
-    self.mass = self.mesh.mass
     
   @classmethod
   def from_mesh(cls, mesh: Trimesh):
@@ -42,7 +48,29 @@ class Hull:
         
   @staticmethod
   def generate_mesh(params: Params) -> Trimesh:
-    return Trimesh() # TODO
+    # Generate outer hull - this represents the hull boundary for buoyancy calculations
+    mesh = generate_simple_hull(
+      length=params.length,
+      beam=params.beam,
+      depth=params.depth,
+      cross_section_exponent=params.cross_section_exponent
+    )
+
+    # Apply rocker deformation
+    mesh = apply_rocker_to_hull(
+      mesh,
+      length=params.length,
+      rocker_bow=params.rocker_bow,
+      rocker_stern=params.rocker_stern,
+      rocker_position=params.rocker_position,
+      rocker_exponent=params.rocker_exponent
+    )
+
+    # Center the mesh
+    centroid = mesh.center_mass
+    mesh.apply_translation([-centroid[0], 0.0, 0.0])
+
+    return mesh
     
   def save_to_stl(self, filepath: str) -> None:
     if self.mesh is None:

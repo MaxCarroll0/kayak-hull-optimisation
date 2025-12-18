@@ -15,5 +15,5 @@ def _bathtub():
     tub.density = kayak_density
     return tub
 
-hull_bathtub = Hull.from_mesh(_bathtub())
+# hull_bathtub = Hull.from_mesh(_bathtub())
     
