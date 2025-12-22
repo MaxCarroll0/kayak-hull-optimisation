@@ -14,6 +14,7 @@ class Params:
     depth - m (float): max depth of hull
     
     cross_section_exponent - float: super-ellipse exponent controlling cross-section shape
+    beam_position - float: position of maximum beam along hull length (0.0=bow, 1.0=stern)
     
     rocker_bow - m (float): keel curvature at bow
     rocker_stern - m (float): keel curvature at stern
@@ -32,6 +33,7 @@ class Params:
 
     # cross-section shape
     cross_section_exponent: float
+    beam_position: float
 
     # longitudinal profile
     rocker_bow: float
