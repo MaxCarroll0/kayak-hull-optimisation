@@ -36,6 +36,7 @@ def plot_RM(xs, ys):
     plt.ylabel("Righting Moment (Nm)")
     plt.title("Righting Moments for Heel Angles")
     plt.legend()
+    plt.savefig("righting_moments.png")
     plt.show()
 
 def plot_simulation(run, hull, lower = -np.pi, upper = np.pi, resolution = 100):
