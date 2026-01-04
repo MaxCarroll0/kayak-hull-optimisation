@@ -13,7 +13,7 @@ class Hull:
   """
   Class for hull objects, generated from a set of parameters, or directly from a mesh
   """
-  def __init__(self, params: Params, from_mesh: Optional[Trimesh] = None) -> None:
+  def __init__(self, params: Optional[Params], from_mesh: Optional[Trimesh] = None) -> None:
     """
     params: dict: "density" ...
     from_mesh: Generate from specified trimesh instead
@@ -36,7 +36,7 @@ class Hull:
     
   @classmethod
   def from_mesh(cls, mesh: Trimesh):
-    return cls(Params(density=mesh.density), from_mesh=mesh)
+    return cls(None, from_mesh=mesh)
         
   @staticmethod
   def generate_mesh(params: Params) -> Trimesh:
@@ -58,4 +58,3 @@ class Hull:
     if self.mesh is None:
       raise ValueError("Mesh not generated")
     trimesh.Scene(self.mesh).show(viewer="gl")
-
