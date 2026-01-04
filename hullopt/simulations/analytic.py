@@ -45,7 +45,7 @@ def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, draught: float) -
   i.e. The centre of mass of the water displaced by the submerged portion and its air pockets.
   """
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
-  water_box = trimesh.creation.box(bounds=[submerged.bounds[0] * 0.9, submerged.bounds[1] * [1.1,1.1,1]])
+  water_box = trimesh.creation.box(bounds=[submerged.bounds[0] * 1.1, submerged.bounds[1] * [1.1,1.1,1]])
   # Calculate water/air meshes around the boat
   water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh])
   pockets = water_diff.split()  # Get all pockets
@@ -70,20 +70,26 @@ def _draught_proportion(mesh: Trimesh, draught: float):
 
 def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
-  water_box = trimesh.creation.box(bounds=[submerged.bounds[0]*0.9, submerged.bounds[1]*[1.1,1.1,1]])
-  water_box._visual.face_colors = [0,255,240,50]
+  water_box = trimesh.creation.box(bounds=[submerged.bounds[0] * 1.1, submerged.bounds[1] * [1.1,1.1,0]])
+  water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh])
+  pockets = water_diff.split()  # Get all pockets
+  # Exactly ONE pocket corresponds to water, and it is the only pocket to contain points outside the submerged points
+  water = next(pocket for pocket in pockets if pocket.contains([submerged.bounds[0]*1.05])[0])
+
+  water._visual.face_colors = [0,255,240,90]
   mesh._visual.face_colors = [255,0,0,255]
-  return trimesh.Scene([mesh, water_box])
+  return trimesh.Scene([mesh, water])
 
 def run(hull: Hull, params: Params, use_cache: bool = True) -> Result:
-
+  T = trimesh.transformations.translation_matrix(hull.mesh.center_mass)
+  mesh = hull.mesh.copy().apply_transform(T)
   R = trimesh.transformations.rotation_matrix(params.heel, [1,0,0], hull.mesh.center_mass)
-  rotated_mesh = hull.mesh.copy().apply_transform(R)
-  iterations, draught = _iterate_draught(rotated_mesh)
+  mesh.apply_transform(R)
+  iterations, draught = _iterate_draught(mesh)
   new_result = Result(
-        righting_moment=_calculate_righting_moment(rotated_mesh, draught),
-        draught_proportion=_draught_proportion(rotated_mesh, draught),
-        scene=_scene_draught(rotated_mesh, draught),
+        righting_moment=_calculate_righting_moment(mesh, draught),
+        draught_proportion=_draught_proportion(mesh, draught),
+        scene=_scene_draught(mesh, draught),
         cost=config.hyperparameters.cost_analytic(iterations)
     )
   if use_cache:
