@@ -17,3 +17,9 @@ dependencies:
   - pip:
     - PyFoam
     - autopep8
+    - scipy
+    - trimesh
+    - manifold3d
+    - shapely
+    - networkx
+    - "pyglet<2"

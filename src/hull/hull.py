@@ -18,15 +18,19 @@ class Hull:
     params: dict: "density" ...
     from_mesh: Generate from specified trimesh instead
     """
-    # Set unmodified params
-    self.density: float = params.density
+    if not params:
+      self.density = from_mesh.density
+    else:
+      # Set unmodified params
+      self.density: float = params.density
+    density = self.density
     
     # Generate Mesh
     if from_mesh is None:
       self.mesh: Trimesh = Hull.generate_mesh(params)
     else:
       self.mesh = from_mesh
-      self.mesh.density = params.density # Override mesh density with params density
+   
     if not self.mesh.is_watertight:
       # We must have a watertight hull mesh
       raise RuntimeError("Generated/Provided Hull contains Holes")
