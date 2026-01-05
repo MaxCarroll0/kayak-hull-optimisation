@@ -9,8 +9,7 @@ dependencies:
   
   # Core stuff
   - numpy
-  - matplotlib
-  
+
 
   
   # Packages not on conda
@@ -23,3 +22,4 @@ dependencies:
     - shapely
     - networkx
     - "pyglet<2"
+    - matplotlib

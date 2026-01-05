@@ -2,17 +2,18 @@
 Analytic Simulation
 """
 
-from .. import config
-from ..hull import Hull
+from functools import reduce
+from typing import Tuple, Any, cast
 import numpy as np
+from scipy import optimize
 import trimesh
 from trimesh import Trimesh, Scene
-from typing import Tuple, Any, cast
-from .params import Params
-from .result import Result
-from functools import reduce
-from scipy import optimize
-from .storage import ResultStorage
+from hullopt import config
+from hullopt.hull import Hull
+from hullopt.simulations.params import Params
+from hullopt.simulations.result import Result
+from hullopt.simulations.storage import ResultStorage
+
 
 
 
