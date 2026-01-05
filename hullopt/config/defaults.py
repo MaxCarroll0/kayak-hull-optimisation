@@ -1,7 +1,7 @@
 """
 Default values for user inputs. e.g. hull constraints
 """
-from ..hull import Hull
+from hullopt import Hull
 import trimesh
 
 kayak_density = 900 # kg/m^3

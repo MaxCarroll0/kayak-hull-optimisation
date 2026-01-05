@@ -3,7 +3,6 @@ Hull object, generated from hull parameters.
 Including mesh and all info required for simulation
 """
 
-from ..config import *
 from trimesh import Trimesh
 import trimesh
 from .params import Params

@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from . import *
-
+from hullopt import simulations
 
 def plot_RM(xs, ys):
     """
