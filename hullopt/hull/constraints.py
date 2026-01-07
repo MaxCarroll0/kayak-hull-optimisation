@@ -9,4 +9,4 @@ class Constraints:
 
   def check_hull(self, hull):
     # Check hull satisfies constraints
-    return true
+    return True

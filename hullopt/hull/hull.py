@@ -17,6 +17,7 @@ class Hull:
     params: Generate hull from params (density, etc.)
     from_mesh: Generate from specified trimesh instead
     """
+    self.params = params
     match (params, from_mesh):
       case None, None:
         raise ValueError("Must specify hull params or mesh")

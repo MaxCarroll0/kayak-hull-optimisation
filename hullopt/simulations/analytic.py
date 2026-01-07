@@ -93,7 +93,7 @@ def run(hull: Hull, params: Params, use_cache: bool = True) -> Result:
         cost=config.hyperparameters.cost_analytic(iterations)
     )
   if use_cache:
-        storage.store(new_result, params)
+        storage.store(new_result, params, hull)
   return new_result
 
 

@@ -3,6 +3,21 @@ import os
 from .result import Result
 from dataclasses import asdict
 from typing import Dict, Tuple, Any
+from hullopt.hull.hull import Params as hullParams
+from dataclasses import dataclass
+
+@dataclass
+class InputParameters:
+    def __init__(self, *args):
+        self._sources = args
+
+    def __getattr__(self, name):
+        for obj in self._sources:
+            if hasattr(obj, name):
+                return getattr(obj, name)
+
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
 
 class ResultStorage:
     def __init__(self, filepath: str = "gp_data.pkl"):
@@ -45,10 +60,10 @@ class ResultStorage:
 
 
 
-    def store(self, result_obj: 'Result', params: Any):
+    def store(self, result_obj: 'Result', sim_params: Any, hull: Any) -> None:
 
         res_dict = result_obj.to_dict()
-
+        params = InputParameters(sim_params, hull.params)
         if hasattr(params, '__dataclass_fields__'):
             param_dict = asdict(params)
         else:
@@ -67,4 +82,4 @@ class ResultStorage:
 
         self.data[key_tuple] = target_val
         self._append_to_file(key_tuple, target_val)
-        print(f"Stored result for params: {param_dict}")
+        # print(f"Stored result for params: {param_dict}")
