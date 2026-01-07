@@ -43,7 +43,9 @@ def plot_heels(ps, rs):
     # Buoyancy curve
     ax2 = ax1.twinx()
     bs = [r.reserve_buoyancy for r in rs]
+    bhs = [r.reserve_buoyancy_hull for r in rs]
     ax2.plot(xs, bs, linestyle="--", color='grey', label="Reserve buoyancy")
+    ax2.plot(xs, bhs, linestyle="--", color='wheat', label="Reserve buoyancy (from unsubmerged hull)")
 
     ax2.set_ylabel("Reserve buoyancy (kg)")
 
