@@ -79,7 +79,11 @@ def _reserve_buoyancy(mesh: Trimesh, draught):
                     'maxiter': config.hyperparameters.draught_max_iterations,
                     'xatol': config.hyperparameters.draught_threshold * (upper-lower+0.002),
                   }))
-  return result.nit, -result.fun - mesh.mass
+  reserve_buoyancy = -result.fun - mesh.mass
+
+  unsubmerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,1], [0,0,draught], cap=True)
+  buoyancy_from_unsubmerged_hull = unsubmerged.volume * (config.constants.water_density - mesh.density)
+  return result.nit, reserve_buoyancy, buoyancy_from_unsubmerged_hull
 
 def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
@@ -99,10 +103,11 @@ def run(hull: Hull, params: Params, use_cache: bool = True) -> Result:
   R = trimesh.transformations.rotation_matrix(params.heel, [1,0,0], hull.mesh.center_mass)
   mesh.apply_transform(R)
   iterations_draught, draught = _iterate_draught(mesh)
-  iterations_reserve_buoyancy, reserve_buoyancy = _reserve_buoyancy(mesh, draught)
+  iterations_reserve_buoyancy, reserve_buoyancy, reserve_buoyancy_hull = _reserve_buoyancy(mesh, draught)
   new_result = Result(
         righting_moment=_calculate_righting_moment(mesh, draught),
         reserve_buoyancy=reserve_buoyancy,
+        reserve_buoyancy_hull=reserve_buoyancy_hull,
         scene=_scene_draught(mesh, draught),
         cost=config.hyperparameters.cost_analytic(iterations_draught + iterations_reserve_buoyancy)
     )
