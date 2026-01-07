@@ -33,8 +33,7 @@ def _iterate_draught(mesh: Trimesh) -> Tuple[int, float]:
                                   upper,
                                   lower,
                                   # TODO, parameterise draught_threshold based on hull?
-                                  # TODO, xtol in terms of absolute mesh bounds (unadjusted)
-                                  xtol=config.hyperparameters.draught_threshold * (upper-lower),
+                                  xtol=config.hyperparameters.draught_threshold * (upper-lower+0.002),
                                   maxiter=config.hyperparameters.draught_max_iterations,
                                   disp=True,
                                   full_output=True)
@@ -78,7 +77,7 @@ def _reserve_buoyancy(mesh: Trimesh, draught):
                   # TODO, parameterise draught_threshold based on hull?
                   options= {
                     'maxiter': config.hyperparameters.draught_max_iterations,
-                    'xatol': config.hyperparameters.draught_threshold * (upper-lower),
+                    'xatol': config.hyperparameters.draught_threshold * (upper-lower+0.002),
                   }))
   return result.nit, -result.fun - mesh.mass
 
