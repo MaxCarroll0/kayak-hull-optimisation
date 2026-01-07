@@ -4,9 +4,9 @@ from .result import Result
 from dataclasses import asdict
 from typing import Dict, Tuple, Any
 from hullopt.hull.hull import Params as hullParams
-from dataclasses import dataclass
+from dataclasses import dataclass, is_dataclass
 
-@dataclass
+
 class InputParameters:
     def __init__(self, *args):
         self._sources = args
@@ -17,7 +17,21 @@ class InputParameters:
                 return getattr(obj, name)
 
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+    def to_dict(self):
 
+        combined_data = {}
+
+        for source in reversed(self._sources):
+
+            if isinstance(source, dict):
+                combined_data.update(source)
+            
+            elif is_dataclass(source):
+                combined_data.update(asdict(source))
+            elif hasattr(source, "__dict__"):
+                combined_data.update(source.__dict__)
+                
+        return combined_data
 
 class ResultStorage:
     def __init__(self, filepath: str = "gp_data.pkl"):
@@ -64,10 +78,10 @@ class ResultStorage:
 
         res_dict = result_obj.to_dict()
         params = InputParameters(sim_params, hull.params)
-        if hasattr(params, '__dataclass_fields__'):
-            param_dict = asdict(params)
-        else:
-            param_dict = vars(params)
+
+
+        param_dict = params.to_dict()
+
 
 
         target_val = res_dict.pop('righting_moment')

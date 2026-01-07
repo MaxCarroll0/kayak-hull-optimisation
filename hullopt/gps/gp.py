@@ -74,27 +74,23 @@ class GaussianProcessSurrogate:
 if __name__ == "__main__":
     from strategies.kernels import HydroPhysicsKernel
     from strategies.priors import HydrostaticBaselinePrior
+    from utils import load_simulation_data
 
 
 
-    rho = 1025
-    g = 9.81
+    DATA_FILE = "gp_data.pkl"
     MODEL_PATH = "models/boat_gp.pkl"
     
-    X_train = np.random.rand(20, 5)
-    
-
-    y_train = (rho * g) * np.sin(X_train[:, 1:2]) * X_train[:, 0:1]
-    
-    col_map = {'speed': [0], 'angles': [1, 2], 'shape': [3, 4]}
+    X_train, y_train, col_map = load_simulation_data(DATA_FILE)
+    # col_map = {'speed': [0], 'angles': [1, 2], 'shape': [3, 4]}
 
    
     k_strat = HydroPhysicsKernel()
-    p_strat = HydrostaticBaselinePrior(speed_idx=0, heel_idx=1, beam_idx=3)
+    p_strat = HydrostaticBaselinePrior(col_map)
     
     gp = GaussianProcessSurrogate(k_strat, p_strat)
 
-    if False: #gp.load(MODEL_PATH):
+    if gp.load(MODEL_PATH):
         print("Skipping training, using loaded model.")
     else:
         print("No model found. Training...")

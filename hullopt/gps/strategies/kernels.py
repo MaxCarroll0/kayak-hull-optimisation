@@ -1,6 +1,6 @@
 import GPy
 from .interfaces import KernelStrategy
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 class StandardMaternKernel(KernelStrategy):
     """
@@ -27,36 +27,62 @@ class HydroPhysicsKernel(KernelStrategy):
 
     def build(self, input_dim: int, column_map: Dict[str, Any]) -> GPy.kern.Kern:
         """
-        Requires column_map to have keys: 'speed', 'angles', 'shape'
+        Dynamically builds kernel based on available keys in column_map.
+        Skips missing components without failing.
         """
-        # 1. See if we got all that we need
-        required_keys = ['speed', 'angles', 'shape']
-        if not all(k in column_map for k in required_keys):
-            raise ValueError(f"{self.name} requires column_map with keys: {required_keys}")
-
-        # 2. We get the indices for each aspect. SOo, we can apply the periodic kernel to the angle input, then RBF to speed, Matern to shape
-        idx_speed = column_map['speed']  
-        idx_angles = column_map['angles']
-        idx_shape = column_map['shape']   
-
-        self.validate_dimensions(input_dim, max(idx_shape) + 1)
-
-
-        k_speed = GPy.kern.RBF(
-            input_dim=len(idx_speed), 
-            active_dims=idx_speed, 
-            name='speed_trend'
-        )
         
+        # We will collect valid sub-kernels here
+        kernels: List[GPy.kern.Kern] = []
 
-        k_heel = GPy.kern.StdPeriodic(input_dim=1, active_dims=[idx_angles[0]], name='heel_p')
-        k_kayak = GPy.kern.StdPeriodic(input_dim=1, active_dims=[idx_angles[1]], name='kayak_p')
-        k_angles = k_heel * k_kayak 
-        k_shape = GPy.kern.Matern52(
-            input_dim=len(idx_shape), 
-            active_dims=idx_shape, 
-            ARD=True, 
-            name='geom_shape'
-        )
+        # --- 1. Speed (RBF) ---
+        if 'speed' in column_map and column_map['speed']:
+            idx_speed = column_map['speed']
+            k_speed = GPy.kern.RBF(
+                input_dim=len(idx_speed), 
+                active_dims=idx_speed, 
+                name='speed_trend'
+            )
+            kernels.append(k_speed)
+        
+        # --- 2. Angles (Periodic) ---
+        # Handle flexible number of angles (e.g. just heel, or heel+yaw)
+        if 'angles' in column_map and column_map['angles']:
+            idx_angles = column_map['angles']
+            k_angles_prod = None
+            
+            for i, idx in enumerate(idx_angles):
+                k_p = GPy.kern.StdPeriodic(
+                    input_dim=1, 
+                    active_dims=[idx], 
+                    name=f'angle_{i}_p'
+                )
+                if k_angles_prod is None:
+                    k_angles_prod = k_p
+                else:
+                    k_angles_prod = k_angles_prod * k_p
+            
+            if k_angles_prod:
+                kernels.append(k_angles_prod)
 
-        return k_speed * k_angles * k_shape
+        # --- 3. Shape (Matern) ---
+        if 'shape' in column_map and column_map['shape']:
+            idx_shape = column_map['shape']
+            k_shape = GPy.kern.Matern52(
+                input_dim=len(idx_shape), 
+                active_dims=idx_shape, 
+                ARD=True, 
+                name='geom_shape'
+            )
+            kernels.append(k_shape)
+
+        if not kernels:
+
+            print(f"Warning: {self.name} found no recognizable columns. Defaulting to Matern.")
+            return GPy.kern.Matern52(input_dim=input_dim, ARD=True)
+
+        # Multiply all collected kernels: k1 * k2 * k3...
+        final_kernel = kernels[0]
+        for k in kernels[1:]:
+            final_kernel = final_kernel * k
+
+        return final_kernel
