@@ -61,8 +61,8 @@ class Hull:
     Constraints().check_hull(self)
     
   @classmethod
-  def from_mesh(cls, mesh: Trimesh):
-    return cls(Params(density=mesh.density), from_mesh=mesh)
+  def from_mesh(cls, params: Params, mesh: Trimesh):
+    return cls(params, from_mesh=mesh)
         
   @staticmethod
   def generate_mesh(params: Params) -> Trimesh:
