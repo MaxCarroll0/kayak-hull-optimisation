@@ -18,6 +18,8 @@ def plot_heels(ps, rs):
         return ys
 
     xs = [p.heel for p in ps]
+    rs_pos = list(map(lambda x: x[1], filter(lambda xr: xr[0] >= 0, zip(xs, rs))))
+    rs_neg = list(map(lambda x: x[1], filter(lambda xr: xr[0] < 0, zip(xs, rs))))
     
     fig, ax1 = plt.subplots(figsize=(10,5))
     ax1.grid(True)
@@ -26,9 +28,16 @@ def plot_heels(ps, rs):
     plt.title("Righting Moments and Reserve Buoyancies for Heel Angles")
 
     # Moment curves
-    ms_heel = remove_discontinuities([r.righting_moment_heel() for r in rs])
-    ms_pitch = remove_discontinuities([r.righting_moment_pitch() for r in rs])
-    ms_yaw = remove_discontinuities([r.righting_moment_yaw() for r in rs])
+    def cleanup_helper(f):
+        # To ensure discontinuities are removed at symmetrical points
+        return list(reversed(remove_discontinuities(list(reversed([f(r) for r in rs_neg]))))) + list(remove_discontinuities([f(r) for r in rs_pos]))
+    
+    ms_heel = cleanup_helper(lambda x: x.righting_moment_heel())
+    ms_pitch = cleanup_helper(lambda x: x.righting_moment_pitch())
+    ms_yaw = cleanup_helper(lambda x: x.righting_moment_yaw())
+
+    print(ms_heel)
+    
     ax1.plot(xs, ms_heel, label="Heel righting moment")
     ax1.plot(xs, ms_pitch, label="Pitch righting moment")
     ax1.plot(xs, ms_yaw, label="Yaw righting moment")
