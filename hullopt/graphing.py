@@ -14,7 +14,7 @@ def plot_heels(ps, rs):
         ys = np.asarray(ys).reshape(-1)
         threshold = 25 * np.median(np.abs(np.diff(ys)))
         jumps = np.abs(np.diff(ys)) > threshold
-        ys[1:][jumps] = np.nan
+        ys[:-1][jumps] = np.nan
         return ys
 
     xs = [p.heel for p in ps]
@@ -71,7 +71,7 @@ def plot_heels(ps, rs):
     plt.savefig("righting_moments.png")
     plt.show()
 
-def plot_simulation(simulation, hull, lower = -np.pi, upper = np.pi, resolution = 100):
+def plot_simulation(simulation, hull, lower = -np.pi, upper = np.pi, resolution = 101):
     """
     simulation: simulation (simulation.analytic, simulation.static, etc.)
     lower: heel angle (rads) lower bound
