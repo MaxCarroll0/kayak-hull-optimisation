@@ -35,7 +35,7 @@ class Hull:
     hull_mass = self.mesh.volume * self.density
     
     # Dummy parameters for paddler
-    PADDLER_MASS = 80.0  # kg
+    PADDLER_MASS = 0 # 80.0  # kg
     COM_HEIGHT = 0.25   # m above keel
     
     hull_com = self.mesh.center_mass
