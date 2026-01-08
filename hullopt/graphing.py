@@ -33,19 +33,23 @@ def plot_heels(ps, rs):
 
     # Mark discontinuities
     first = True
+    discontinuities = []
     for idm, y in enumerate(ms_heel + ms_pitch + ms_yaw):
         if np.isnan(y):
-            plt.axvline(xs[idm], color='red', linestyle=':', label=('Discontinuities (hull flooded)' if first else None))
-            first = False
+            plt.axvline(xs[idm], color='red', linestyle=':', label=('Discontinuities (hull flooded)' if not discontinuities else None))
+            discontinuities += [idm]
 
     ax1.set_ylabel("Righting Moment (Nm)")
 
     # Buoyancy curve
     ax2 = ax1.twinx()
-    bs = [r.reserve_buoyancy for r in rs]
-    bhs = [r.reserve_buoyancy_hull for r in rs]
-    ax2.plot(xs, bs, linestyle="--", color='grey', label="Reserve buoyancy")
-    ax2.plot(xs, bhs, linestyle="--", color='wheat', label="Reserve buoyancy (from unsubmerged hull)")
+    bs = np.asarray([r.reserve_buoyancy for r in rs])
+    bhs = np.asarray([r.reserve_buoyancy_hull for r in rs])
+    bs[discontinuities] = np.nan
+    bhs[discontinuities] = np.nan
+    ax2.plot(xs, bhs, color='wheat', label="Reserve buoyancy (from unsubmerged hull)")
+    ax2.plot(xs, bs, color='grey', label="Reserve buoyancy")
+
 
     ax2.set_ylabel("Reserve buoyancy (kg)")
 
