@@ -10,7 +10,7 @@ class Result:
     
     righting_moment - Nm (float, float, float): angular forces exerted on the hull by buoyancy & fluid flow (note 3 dimensions x,y,z)
     reserve_buoyancy - kg (float): maximum extra lift possible by water displaced by pushing the hull further underwater (generally, the point of downflooding)
-    reserve_buoyancy_hull - kg (float): the reserve buoyancy that the unsubmerged portion of hull contributes (i.e. excluding air pockets within the hull)
+    reserve_buoyancy_hull - kg (float): the greatest reserve buoyancy that the submerged portion of hull contributes (i.e. reserve buoyancy excluding air pockets within the hull)
     scene - Trimesh.Scene: scene containing the tilted hull & waterline for viewing with scene.show()
     cost - float: Simulation cost (accounting for # of iterations, and discretisation). Note: does not account for (hardware-dependent) time taken to complete
     """
