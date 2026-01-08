@@ -44,7 +44,7 @@ def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, draught: float) -
   Calculate the centre of buoyancy for a given draught level.
   i.e. The centre of mass of the water displaced by the submerged portion and its air pockets.
   """
-  draught = np.asarray(draught).item() # Basin hopping sometimes converts draught to [draught] for some reason
+  draught = np.asarray(draught).item() # scipy optimize may turn draught into a singleton vector
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
   water_box = trimesh.creation.box(bounds=[submerged.bounds[0] * 1.1, submerged.bounds[1] * [1.1,1.1,1]])
   # Calculate water/air meshes around the boat
@@ -64,34 +64,21 @@ def _calculate_righting_moment(mesh: Trimesh, draught: float) -> Tuple[float, fl
   righting_moment = np.cross(righting_lever, gravity_force)
   return tuple(righting_moment)
 
-def compose(f, g):
+def _compose(f, g):
     return lambda *a, **kw: f(g(*a, **kw))
 
 def _reserve_buoyancy(mesh: Trimesh, draught):
   lower = draught
   upper = mesh.bounds[1][2] - 0.001
-  # TODO: Basin hopping is overkill for this system with 2 simple minima for most hull shapes
-  #       But in general, for very complex hull shapes we may need this
-  result = cast(optimize.OptimizeResult,
-                optimize.basinhopping(compose(
-                  lambda t: -t[1],
-                  partial(_calculate_centre_buoyancy_and_displacement, mesh)),
-                  draught,
-                  niter=20, # Todo parameterise?
-                  stepsize=(upper-lower)*0.1,
-                  minimizer_kwargs = {
-                    #'bounds': (lower, upper),
-                     # TODO, parameterise draught_threshold based on hull?
-                    'tol': config.hyperparameters.draught_threshold * (upper-lower+0.002),
-                    'options': {
-                      'maxiter': config.hyperparameters.draught_max_iterations,
-                    }}
-                ))
-  reserve_buoyancy = -result.fun - mesh.mass
+  f = _compose(lambda t: -t[1],
+              partial(_calculate_centre_buoyancy_and_displacement, mesh))
+  loops = 10 # TODO parameterise
+  result = optimize.brute(f, ranges=[slice(lower,upper,(upper-lower)*1/loops)])
+  reserve_buoyancy = -f(result[0]) - mesh.mass
 
   unsubmerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,1], [0,0,draught], cap=True)
   buoyancy_from_unsubmerged_hull = unsubmerged.volume * config.constants.water_density
-  return result.nit, reserve_buoyancy, buoyancy_from_unsubmerged_hull
+  return loops, reserve_buoyancy, buoyancy_from_unsubmerged_hull
 
 def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
@@ -114,7 +101,7 @@ def run(hull: Hull, params: Params, use_cache: bool = True) -> Result:
   iterations_reserve_buoyancy, reserve_buoyancy, reserve_buoyancy_hull = _reserve_buoyancy(mesh, draught)
   new_result = Result(
         righting_moment=_calculate_righting_moment(mesh, draught),
-        reserve_buoyancy=reserve_buoyancy,
+        reserve_buoyancy=float(reserve_buoyancy),
         reserve_buoyancy_hull=reserve_buoyancy_hull,
         scene=_scene_draught(mesh, draught),
         cost=config.hyperparameters.cost_analytic(iterations_draught + iterations_reserve_buoyancy)
