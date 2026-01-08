@@ -70,14 +70,24 @@ def _compose(f, g):
     return lambda *a, **kw: f(g(*a, **kw))
 
 def _reserve_buoyancy(mesh: Trimesh, draught):
-  lower = draught
-  upper = mesh.bounds[1][2] - 0.001
+  lower = mesh.bounds[0][1]
+  upper = mesh.bounds[1][2]
   f = _compose(lambda t: -t[1],
               partial(_calculate_centre_buoyancy_and_displacement, mesh))
-  loops = 10 # TODO parameterise
-  best_draught = float(optimize.brute(f, ranges=[slice(lower,upper,(upper-lower)*1/loops)])[0])
+  brute_threshold = (upper-lower) * config.hyperparameters.draught_threshold * 100 # TODO parameterise
+  ranges = [slice(draught,upper,brute_threshold)]
+  best_draught = float(optimize.brute(f, ranges)[0])
+  result = cast(optimize.OptimizeResult,
+                optimize.minimize_scalar(
+                  f,
+                  bounds=(best_draught - brute_threshold, best_draught + brute_threshold),
+                  options= {
+                    'maxiter': config.hyperparameters.draught_max_iterations,
+                    'xatol': config.hyperparameters.draught_threshold * (upper-lower),
+                  }))
   _, displacement, buoyancy_hull = _calculate_centre_buoyancy_and_displacement(mesh, best_draught)
-  return loops, displacement - mesh.mass, buoyancy_hull - mesh.mass
+  _, displacement2, buoyancy_hull2 = _calculate_centre_buoyancy_and_displacement(mesh, result.x)
+  return len(ranges) + result.nit, max(displacement, displacement2) - mesh.mass, max(buoyancy_hull, buoyancy_hull2) - mesh.mass
 
 def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
