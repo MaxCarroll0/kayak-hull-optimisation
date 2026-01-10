@@ -46,7 +46,7 @@ def plot_heels(ps, rs):
     first = True
     discontinuities = []
     for idm, y in enumerate(ms_heel + ms_pitch + ms_yaw):
-        if np.isnan(y):
+        if np.isnan(y) and idm < len(xs):
             plt.axvline(xs[idm], color='red', linestyle=':', label=('Discontinuities (hull flooded)' if not discontinuities else None))
             discontinuities += [idm]
 
