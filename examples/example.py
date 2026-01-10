@@ -2,14 +2,14 @@
 import pickle
 from hullopt.simulations.analytic import run
 from hullopt.simulations.params import Params
-from hullopt.config.defaults import hull_bathtub
+from hullopt.config.defaults import dummy_hull
 
 
 
 
 # First step: We run a simulation for a given heel angle:
-for k in range(5):
-    result = run(hull_bathtub, Params(heel=0.1*k))
+for k in range(31):
+    result = run(dummy_hull, Params(heel=0.1*k))
 
 
 
