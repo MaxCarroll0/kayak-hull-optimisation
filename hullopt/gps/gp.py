@@ -74,6 +74,8 @@ class GaussianProcessSurrogate:
         except (pickle.PickleError, EOFError) as e:
             print(f"Failed to load model from {filepath}: {e}")
             return False
+        
+        
 if __name__ == "__main__":   
     from strategies.compare import compare_models    
     from strategies.kernels import HydroPhysicsKernel, StandardMaternKernel
