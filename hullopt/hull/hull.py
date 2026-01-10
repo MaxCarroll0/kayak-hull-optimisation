@@ -30,27 +30,6 @@ class Hull:
     else:
       self.mesh = from_mesh
       self.mesh.density = params.density # Override mesh density with params density
-    
-    # Set derived properties
-    hull_mass = self.mesh.volume * self.density
-    
-    # Dummy parameters for paddler
-    PADDLER_MASS = 0 # 80.0  # kg
-    COM_HEIGHT = 0.25   # m above keel
-    
-    hull_com = self.mesh.center_mass
-    paddler_x = (params.cockpit_position - 0.5) * params.length # paddlier is assumed to be stationary at cockpit position
-    keel_z = self.mesh.bounds[0][2]  # Bottom of hull
-    paddler_z = keel_z + COM_HEIGHT  # Center of mass of paddler is assumed to be at belly button height given seat is near keel
-    paddler_com = np.array([paddler_x, 0.0, paddler_z])
-    
-    # Calculate system properties
-    self.mass = hull_mass + PADDLER_MASS
-    system_com = (hull_mass * hull_com + PADDLER_MASS * paddler_com) / self.mass
-    
-    # Override mesh properties to represent system (hull + paddler)
-    self.mesh.density = self.mass / self.mesh.volume
-    self.mesh.center_mass = system_com
 
     if not self.mesh.is_watertight:
       # We must have a watertight hull mesh
