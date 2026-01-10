@@ -104,13 +104,14 @@ class Hull:
     mesh.apply_translation([-centroid[0], -centroid[1], 0.0])
 
     # Add cockpit opening
-    mesh = add_cockpit_to_hull(
-      mesh,
-      length=params.length,
-      cockpit_length=params.cockpit_length,
-      cockpit_width=params.cockpit_width,
-      cockpit_position=params.cockpit_position
-    )
+    if params.cockpit_opening:
+      mesh = add_cockpit_to_hull(
+        mesh,
+        length=params.length,
+        cockpit_length=params.cockpit_length,
+        cockpit_width=params.cockpit_width,
+        cockpit_position=params.cockpit_position
+      )
 
     return mesh
     

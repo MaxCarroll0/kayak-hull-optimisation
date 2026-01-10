@@ -21,6 +21,7 @@ class Params:
     rocker_position - float: position of minimum rocker along hull length (0.0=bow, 1.0=stern)
     rocker_exponent - float: exponent controlling how banana-shaped the kayak is at each end
 
+    cockpit_opening - bool: whether to include a cockpit opening
     cockpit_length - m (float): length of cockpit opening
     cockpit_width - m (float): width of cockpit opening
     cockpit_position - float: position of cockpit center along hull length ~ at centre
@@ -49,3 +50,4 @@ class Params:
     cockpit_length: float
     cockpit_width: float
     cockpit_position: float = 0.5
+    cockpit_opening: bool = False
