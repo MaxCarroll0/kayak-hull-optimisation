@@ -141,7 +141,7 @@ def add_cockpit_to_hull(mesh: Trimesh, length: float, cockpit_length: float, coc
     cutter.apply_scale([scale_x, 1.0, 1.0])
 
     # Position the cutter around the cockpit position
-    center_x = (cockpit_position - 0.5) * length
+    center_x = cockpit_position * length
     
     # Get z-coordinate at the edge
     bow_z = mesh.bounds[1][2]  # Top z at bow

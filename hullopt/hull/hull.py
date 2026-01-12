@@ -68,10 +68,6 @@ class Hull:
     except Exception:
         mesh = outer_mesh.difference(inner_mesh)
 
-    # Center the mesh
-    centroid = mesh.center_mass
-    mesh.apply_translation([-centroid[0], -centroid[1], 0.0])
-
     # Add cockpit opening
     if params.cockpit_opening:
       mesh = add_cockpit_to_hull(
@@ -91,6 +87,10 @@ class Hull:
       rocker_position=params.rocker_position,
       rocker_exponent=params.rocker_exponent
     )
+
+    # Center the mesh
+    centroid = mesh.center_mass
+    mesh.apply_translation([-centroid[0], -centroid[1], 0.0])
 
     return mesh
     
