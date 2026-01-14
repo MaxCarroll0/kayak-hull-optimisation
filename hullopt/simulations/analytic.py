@@ -29,6 +29,11 @@ def _iterate_draught(mesh: Trimesh) -> Tuple[int, float]:
 
   lower = mesh.bounds[0][2] + 0.001 # 1mm buffer. TODO: switch to be in terms of draught_threshold
   upper = mesh.bounds[1][2] - 0.001
+
+  if required_buoyancy(upper) < 0:
+    # Hull sinks
+    return 0, upper
+  
   draught, draught_result = optimize.bisect(required_buoyancy,
                                   upper,
                                   lower,
