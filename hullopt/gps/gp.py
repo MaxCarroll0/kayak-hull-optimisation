@@ -109,5 +109,5 @@ if __name__ == "__main__":
 
     print(f"\nSaving fully trained HydroPhysics model to {MODEL_PATH}...")
     final_gp = models_to_compare["HydroPhysics"]
-    final_gp.fit(X_train, y_train, col_map)
+    # final_gp.fit(X_train, y_train, col_map) Gets already fitted inside the compare models function
     final_gp.save(MODEL_PATH)
