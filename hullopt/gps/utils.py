@@ -6,6 +6,7 @@ from typing import Tuple, Dict, Any, List
 
 def get_category_heuristic(param_name: str) -> str:
     """Fallback logic to guess category if not in dictionary."""
+    print("This should not be called")
     param_lower = param_name.lower()
     
     # Simple heuristics
@@ -20,11 +21,11 @@ def get_category_heuristic(param_name: str) -> str:
 def default_param_categories() -> Dict[str, str]:
     return {'heel': 'angles', 'length': 'shape', 'beam': 'shape', 'density': 'shape', 'draft': 'shape', 'section_shape_exponent': 'shape'}
 
-def load_simulation_data(filepath: str, user_categories: Dict[str, str] = None) -> Tuple[np.ndarray, np.ndarray, Dict[str, List[int]]]:
-    
-    category_map = default_param_categories()
-    if user_categories:
-        category_map.update(user_categories)
+def load_simulation_data(filepath: str) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    """
+    Loads simulation data from a pickle file.
+    Returns the X matrix, y matrix, and the list of column names corresponding to X.
+    """
 
     raw_inputs = []
     raw_outputs = []
@@ -34,11 +35,16 @@ def load_simulation_data(filepath: str, user_categories: Dict[str, str] = None) 
             try:
                 row_data = pickle.load(f)
                 
-                input_tuple = row_data[0]
-                output_tuple = row_data[1]
+                # Assuming row_data is a tuple like (input_dict, output_tuple)
+                input_data = row_data[0]
+                output_data = row_data[1]
                 
-                raw_inputs.append(dict(input_tuple))
-                raw_outputs.append([float(x) for x in output_tuple])
+                # Ensure input is a dictionary (convert if it's a tuple of pairs)
+                if not isinstance(input_data, dict):
+                    input_data = dict(input_data)
+                
+                raw_inputs.append(input_data)
+                raw_outputs.append([float(x) for x in output_data])
                 
             except EOFError:
                 break
@@ -48,46 +54,25 @@ def load_simulation_data(filepath: str, user_categories: Dict[str, str] = None) 
     
     if not raw_inputs:
         print("No data loaded.")
-        return np.array([]), np.array([]), {}
+        return np.array([]), np.array([]), []
 
+    # 1. Determine the column order based on the first row's keys
+    #    This ensures consistency for the entire X matrix construction.
     feature_order = list(raw_inputs[0].keys())
-    print(feature_order)
-    
-    col_map = {'speed': [], 'angles': [], 'shape': []}
     
     print("-" * 40)
-    print(f"Found {len(feature_order)} parameters in file. Mapping categories:")
-    
-    for idx, key in enumerate(feature_order):
-        
-        if key in category_map:
-            cat = category_map[key]
-            source = "Dictionary"
-
-        else:
-            cat = get_category_heuristic(key)
-            source = "Heuristic"
-            
-        if cat not in col_map:
-
-            print(f"  [Warning] Unknown category '{cat}' for '{key}'. Defaulting to 'shape'.")
-            cat = 'shape'
-
-
-        col_map[cat].append(idx)
-        print(f"  Col {idx}: '{key}' -> {cat} ({source})")
-
+    print(f"Loaded {len(raw_inputs)} rows.")
+    print(f"Data Column Order: {feature_order}")
     print("-" * 40)
 
-
+    # 2. Build X matrix enforcing the specific feature_order
     X_list = []
     for d in raw_inputs:
-        print(d)
-
+        # Extract values in the exact order of feature_order
         row = [float(d[k]) for k in feature_order]
         X_list.append(row)
 
     X = np.array(X_list, dtype=np.float64)
     y = np.array(raw_outputs, dtype=np.float64)
-    print(col_map)
-    return X, y, col_map
+    
+    return X, y, feature_order

@@ -5,7 +5,7 @@ import GPy
 import matplotlib.pyplot as plt 
 from sklearn.model_selection import train_test_split 
 
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple, Optional, List
 from strategies.interfaces import KernelStrategy, PriorStrategy
 
 
@@ -21,7 +21,7 @@ class GaussianProcessSurrogate:
         self.p_strat = prior_strat
         self.model: Optional[GPy.models.GPRegression] = None
 
-    def fit(self, X: np.ndarray, y: np.ndarray, col_map: Dict[str, Any]) -> None:
+    def fit(self, X: np.ndarray, y: np.ndarray, column_order: List[str]) -> None:
         """
         Constructs the kernel/prior from strategies and optimizes the GP.
         """
@@ -31,7 +31,7 @@ class GaussianProcessSurrogate:
         input_dim = X.shape[1]
         
 
-        kernel = self.k_strat.build(input_dim, col_map)
+        kernel = self.k_strat.build(input_dim, column_order)
         mean_func = self.p_strat.get_mean_function(input_dim, output_dim=y.shape[1])
         
 
@@ -86,14 +86,14 @@ if __name__ == "__main__":
     MODEL_PATH = "models/boat_gp.pkl"
 
 
-    X_full, y_full, col_map = load_simulation_data(DATA_FILE)
+    X_full, y_full, column_order = load_simulation_data(DATA_FILE)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X_full, y_full, test_size=0.2, random_state=42
     )
 
 
-    p_strat = HydrostaticBaselinePrior(col_map)
+    p_strat = HydrostaticBaselinePrior(column_order)
     z_strat = ZeroMeanPrior()
 
     config_dict = {"rocker_bow": "matern52", "heel": "periodic" }
@@ -101,11 +101,10 @@ if __name__ == "__main__":
     models_to_compare = {
         "HydroPhysics": GaussianProcessSurrogate(ConfigurablePhysicsKernel(config_dict), p_strat),
         "Standard Everything": GaussianProcessSurrogate(StandardMaternKernel(), z_strat),
-        "Standard Kernel Hydro Prior": GaussianProcessSurrogate(StandardMaternKernel(), p_strat),
-        "Hydro Kernel Zero Prior": GaussianProcessSurrogate(HydroPhysicsKernel(), z_strat),
+
     }
 
-    compare_models(models_to_compare, X_train, y_train, X_test, y_test, col_map)
+    compare_models(models_to_compare, X_train, y_train, X_test, y_test, column_order)
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
 
 

@@ -14,7 +14,7 @@ def compare_models(
     y_train: np.ndarray,
     X_test: np.ndarray,
     y_test: np.ndarray,
-    col_map: Dict[str, Any],
+    column_order: List[str],
     ratios: List[float] = [0.2, 0.4, 0.6, 0.8, 1.0]
 ) -> None:
     """
@@ -43,7 +43,7 @@ def compare_models(
         for name, gp in models.items():
             try:
                 # We catch errors here so one failing model doesn't crash the whole loop
-                gp.fit(X_sub, y_sub, col_map)
+                gp.fit(X_sub, y_sub, column_order)
                 mu, _ = gp.predict(X_test)
                 rmse = np.sqrt(mean_squared_error(y_test, mu))
                 results[name].append(rmse)

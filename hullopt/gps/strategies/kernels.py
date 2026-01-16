@@ -2,7 +2,7 @@
 import GPy
 from .interfaces import KernelStrategy
 from typing import Dict, Any, List, Union
-
+from collections import defaultdict
 class ConfigurablePhysicsKernel(KernelStrategy):
     """
     This is my newest attempt. Ideally you should be able to pass a config dict to use all the different kernels in the kernel registry.
@@ -27,11 +27,14 @@ class ConfigurablePhysicsKernel(KernelStrategy):
         """
         super().__init__(name="Configurable Physics Kernel", config=config_map)
 
-    def build(self, input_dim: int, column_map: Dict[str, Any]) -> GPy.kern.Kern:
+    def build(self, input_dim: int, parameter_order: List[str]) -> GPy.kern.Kern:
         """
         Just goes through the column_map. If the key exists in self.config,
         it builds that specific kernel for those specific columns.
         """
+        column_map = defaultdict(list)
+        for idx, param_name in enumerate(parameter_order):
+            column_map[param_name].append(idx)
         kernels: List[GPy.kern.Kern] = []
         
         for phys_key, indices in column_map.items():
