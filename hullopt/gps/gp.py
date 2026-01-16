@@ -99,7 +99,7 @@ if __name__ == "__main__":
     config_dict = {"rocker_bow": "matern52", "heel": "periodic" }
 
     models_to_compare = {
-        "HydroPhysics": GaussianProcessSurrogate(ConfigurablePhysicsKernel(config_dict), p_strat),
+        "HydroPhysics": GaussianProcessSurrogate(ConfigurablePhysicsKernel(config_dict), z_strat),
         "Standard Everything": GaussianProcessSurrogate(StandardMaternKernel(), z_strat),
 
     }
