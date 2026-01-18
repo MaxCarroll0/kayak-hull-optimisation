@@ -10,7 +10,7 @@ class Constraints:
                depth_range: tuple[float, float]=(0.25,0.40),
                hull_thickness_range: tuple[float, float]=(0.002,0.006),
                cross_section_exponent_range: tuple[float, float]=(1.5,3.0),
-               beam_position_range: tuple[float, float] = (0.35, 0.65),
+               beam_position_range: tuple[float, float] = (0.40, 0.60),
                rocker_bow_range: tuple[float, float]=(0.05,0.35) ,
                rocker_stern_range: tuple[float, float]=(0.05,0.35),
                rocker_position_range: tuple[float, float]=(0.35,0.60),
