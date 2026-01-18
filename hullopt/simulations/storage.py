@@ -84,11 +84,16 @@ class ResultStorage:
 
 
 
-        target_val = res_dict.pop('righting_moment')
-
-
+        right_moment = res_dict.pop('righting_moment')
+        assert len(right_moment) == 3, "Expected righting_moment to be a tuple of 3 floats."
+        buoyancy = res_dict.pop('reserve_buoyancy')
+        hull_buoyancy = res_dict.pop('reserve_hull_buoyancy')
+        buoy_tuple = (buoyancy, hull_buoyancy)
+        target_val = (right_moment,buoy_tuple)
+        
         if 'scene' in res_dict:
             del res_dict['scene']
+            
             
         merged_data = {**res_dict, **param_dict}
         key_tuple = tuple(sorted(merged_data.items()))

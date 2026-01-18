@@ -3,9 +3,7 @@ import pickle
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from hullopt.simulations.analytic import run
-from hullopt.simulations.params import Params
-from hullopt.config.defaults import dummy_hull
+
 
 from hullopt.gps.strategies.compare import compare_models
 from hullopt.gps.strategies.kernels import HydroPhysicsKernel, StandardMaternKernel, ConfigurablePhysicsKernel
@@ -16,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from hullopt.gps.base_functions import create_gp, update_gp
 from hullopt.gps.gp import GaussianProcessSurrogate
 
-from hullopt.hull.utils import generate_random_hulls
+
 
 
 # Configuration variables here
@@ -28,12 +26,26 @@ KERNEL_CONFIG = {"rocker_bow": "matern52", "heel": "periodic" }
 
 # Initial data gathering for GP
 if not os.path.exists(DATA_PATH):
+    from hullopt.hull.utils import generate_random_hulls
+    from hullopt.config.defaults import dummy_hull
+    print("this shouldnt happen anymore")
+    from hullopt.simulations.params import Params
+    from hullopt.simulations.analytic import run
     hulls = generate_random_hulls(n=20, cockpit_opening=False, seed=42)
     # Second step: We run a simulation for a given heel angle:
     for hull in hulls[:1]:
         for k in range(301):
             result = run(hull, Params(heel=0.1*k))
-
+else:
+    with open("gp_data.pkl", "rb") as f_read:
+        while True:
+            try:
+                entry = pickle.load(f_read)
+                print("Read back:", entry)
+                break
+            except EOFError:
+                break
+    exit()
     
 X_full, y_full, column_order = load_simulation_data(DATA_PATH)
 
