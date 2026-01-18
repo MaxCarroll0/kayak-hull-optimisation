@@ -36,6 +36,7 @@ if not os.path.exists(DATA_PATH):
     i = 0
     for hull in hulls[:1]:
         print("Simulating random hull: " + str(i))
+        i += 1
         for k in range(301):
             result = run(hull, Params(heel=0.1*k))
 else:
@@ -44,7 +45,6 @@ else:
             try:
                 entry = pickle.load(f_read)
                 print("Read back:", entry)
-                break
             except EOFError:
                 break
     exit()

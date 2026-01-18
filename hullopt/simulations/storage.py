@@ -87,7 +87,7 @@ class ResultStorage:
         right_moment = res_dict.pop('righting_moment')
         assert len(right_moment) == 3, "Expected righting_moment to be a tuple of 3 floats."
         buoyancy = res_dict.pop('reserve_buoyancy')
-        hull_buoyancy = res_dict.pop('reserve_hull_buoyancy')
+        hull_buoyancy = res_dict.pop('reserve_buoyancy_hull')
         buoy_tuple = (buoyancy, hull_buoyancy)
         target_val = (right_moment,buoy_tuple)
         
