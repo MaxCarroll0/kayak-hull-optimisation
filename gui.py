@@ -263,9 +263,12 @@ if __name__ == "__main__":
     # --- 1. Run Weight Selector (Existing) ---
     @dataclass
     class GP_Result:
-        hydro_drag: float
-        static_stability: float
-        material_cost: float
+        overall_stability: float
+        initial_stability: float
+        righting_energy: float
+        tipping_point: float
+        overall_buoyancy: float
+        initial_buoyancy: float
     
     # print("--- Step 1: Weight Selector ---")
     # gui_weights = WeightSelector(GP_Result)
