@@ -38,7 +38,9 @@ def load_simulation_data(filepath: str) -> Tuple[np.ndarray, np.ndarray, List[st
                 # Assuming row_data is a tuple like (input_dict, output_tuple)
                 input_data = row_data[0]
                 output_data = row_data[1]
-                
+                assert len(output_data) == 2
+                assert len(output_data[0]) == 3
+                assert len(output_data[1]) == 2
                 # Ensure input is a dictionary (convert if it's a tuple of pairs)
                 if not isinstance(input_data, dict):
                     input_data = dict(input_data)
