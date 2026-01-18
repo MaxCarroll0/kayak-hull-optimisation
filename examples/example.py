@@ -8,6 +8,7 @@ from hullopt.hull.constraints import Constraints
 from hullopt.gps.strategies.compare import compare_models
 from hullopt.gps.strategies.kernels import HydroPhysicsKernel, StandardMaternKernel, ConfigurablePhysicsKernel
 from hullopt.gps.strategies.priors import HydrostaticBaselinePrior, ZeroMeanPrior
+from hullopt.gps.aggregator import Aggregator
 from hullopt.gps.utils import load_simulation_data
 from gui import WeightSelector, ResultVisualizer
 from sklearn.model_selection import train_test_split
@@ -82,15 +83,14 @@ user_weights = WeightSelector(column_order, GP_Result)
 
 
 
-f = None
-# aggregator = Aggregator(user_weights, gp)
+aggregator = Aggregator(user_weights, gp, column_order)
+f = aggregator.f
 
 
 
 best_params, best_dict, best_score = optimise(f, Constraints())
 
 visualizer = ResultVisualizer(best_params, best_dict, best_score, Hull)
-
 
 
 
