@@ -33,7 +33,9 @@ if not os.path.exists(DATA_PATH):
     from hullopt.simulations.analytic import run
     hulls = generate_random_hulls(n=20, cockpit_opening=False, seed=42)
     # Second step: We run a simulation for a given heel angle:
+    i = 0
     for hull in hulls[:1]:
+        print("Simulating random hull: " + str(i))
         for k in range(301):
             result = run(hull, Params(heel=0.1*k))
 else:
