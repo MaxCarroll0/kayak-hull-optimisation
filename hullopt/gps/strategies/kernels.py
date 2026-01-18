@@ -4,11 +4,29 @@ from .interfaces import KernelStrategy
 from typing import Dict, Any, List, Union
 from collections import defaultdict
 class ConfigurablePhysicsKernel(KernelStrategy):
+
+
     """
     This is my newest attempt. Ideally you should be able to pass a config dict to use all the different kernels in the kernel registry.
     Important: If the input is not in the config it will not be tracked! 
     """
-    
+    @staticmethod
+    def _build_periodic_matern(input_dim: int, active_dims: List[int], name: str) -> GPy.kern.Kern:
+        """
+        Creates a Locally Periodic kernel (Periodic * Matern52).
+        This allows periodicity that can evolve/decay over distance.
+        """
+        # Periodic base (Strict repetition)
+        kp = GPy.kern.StdPeriodic(input_dim=input_dim, active_dims=active_dims, name=f"{name}_p")
+        
+        # Matern decay (Allows the pattern to change shape over long distances)
+        km = GPy.kern.Matern52(input_dim=input_dim, active_dims=active_dims, name=f"{name}_m")
+        
+        return kp * km
+
+
+
+
     KERNEL_REGISTRY = {
         'rbf': GPy.kern.RBF,
         'matern52': GPy.kern.Matern52,
@@ -17,7 +35,9 @@ class ConfigurablePhysicsKernel(KernelStrategy):
         'linear': GPy.kern.Linear,
         'white': GPy.kern.White,
         'bias': GPy.kern.Bias,
-        'cosine': GPy.kern.Cosine
+        'cosine': GPy.kern.Cosine,
+        'periodic_matern': _build_periodic_matern
+
     }
 
     def __init__(self, config_map: Dict[str, str]):
