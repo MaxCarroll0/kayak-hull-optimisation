@@ -41,8 +41,6 @@ if not os.path.exists(DATA_PATH):
         for k in tqdm(range(31), desc=f"Simulating hull {idx+1}/{len(hulls)}"):
             result = run(hull, Params(heel=0.1*k))
 
-logging_file.close()
-
     
 X_full, y_full, column_order = load_simulation_data(DATA_PATH)
 
@@ -59,6 +57,9 @@ rmse = create_gp(
     y_test
 )
 print(f"Initial GP RMSE: {rmse}")
+
+# Close the logging file at the end
+logging_file.close()
 
 # with open("gp_data.pkl", "rb") as f_read:
 #     while True:
