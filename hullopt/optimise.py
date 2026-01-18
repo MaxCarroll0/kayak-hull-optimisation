@@ -8,6 +8,7 @@ This is the function that takes in a function F: Hullparams, Inputparams -> Scor
 
 import optuna
 from hullopt.hull.params import Params
+from hullopt.hull.hull import Hull
 from hullopt.hull.constraints import Constraints
 
 
@@ -70,7 +71,7 @@ def optimise(F, Constraint: Constraints) -> Params:
         )
 
         try:
-            Constraint.check_hull(current_params)
+            Constraint.check_hull(Hull(current_params))
         except ValueError:
 
             raise optuna.TrialPruned()
