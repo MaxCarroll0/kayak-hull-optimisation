@@ -30,13 +30,12 @@ KERNEL_CONFIG = {"rocker_bow": "matern52", "heel": "periodic" }
 # Initial data gathering for GP
 if not os.path.exists(DATA_PATH):
     print(os.getcwd())
-    print("this shouldnt happen anymore")
     from hullopt.hull.utils import generate_random_hulls
     from hullopt.config.defaults import dummy_hull
     
     from hullopt.simulations.params import Params
     from hullopt.simulations.analytic import run
-    hulls = generate_random_hulls(n=20, cockpit_opening=False, seed=42)
+    hulls = generate_random_hulls(n=100, cockpit_opening=False, seed=42)
     # Second step: We run a simulation for a given heel angle:
     i = 0
     for hull in hulls[:1]:
@@ -78,7 +77,7 @@ class GP_Result:
 
 
 
-user_weights = WeightSelector(column_order, GP_Result)
+user_weights = WeightSelector(column_order, GP_Result).run()
 
 
 
