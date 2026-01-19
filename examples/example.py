@@ -162,12 +162,11 @@ class GP_Result:
     overall_buoyancy: float
     initial_buoyancy: float
 
-
-user_weights = WeightSelector(column_order, GP_Result).run()
+user_weights = WeightSelector(GP_Result).run()
 
 aggregator = Aggregator(user_weights, gp_righting, gp_buoyancy, column_order)
 f = aggregator.f
 
-best_params, best_dict, best_score = optimise(f, Constraints())
+best_params, best_dict, best_score = optimise(f, Constraints(), time=1)
 
 visualizer = ResultVisualizer(best_params, best_dict, best_score, Hull)

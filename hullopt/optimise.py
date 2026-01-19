@@ -14,7 +14,7 @@ from hullopt.hull.constraints import Constraints
 
 
 
-def optimise(F, Constraint: Constraints) -> Params:
+def optimise(F, Constraint: Constraints, time=1) -> Params:
     """
     Optimizes hull parameters to maximize score from function F using Bayesian Optimization.
     
@@ -91,9 +91,9 @@ def optimise(F, Constraint: Constraints) -> Params:
     study = optuna.create_study(direction="maximize")
     
     print("Starting Bayesian Optimization...")
-    print("Time limit: 20 minutes")
+    print(f"Time limit: {time} minutes")
     
-    study.optimize(objective, timeout=20 * 60)
+    study.optimize(objective, timeout=time * 60)
 
     best_trial = study.best_trial
     
