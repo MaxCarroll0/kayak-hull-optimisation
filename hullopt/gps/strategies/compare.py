@@ -25,22 +25,22 @@ def compare_models(
     # Dictionary to store results for each model: {'ModelName': [rmse_20, rmse_40...]}
     results = {name: [] for name in models.keys()}
     valid_ratios = []
-
-    for ratio in ratios:
-        n = int(len(X_train) * ratio)
+    
+    for name, gp in models.items():
+        for ratio in ratios:
+            n = int(len(X_train) * ratio)
         
-        # Safety check for very small datasets
-        if n < 1:
-            print(f"Skipping {int(ratio*100)}% (0 samples calculated)")
-            continue
+            # Safety check for very small datasets
+            if n < 1:
+                print(f"Skipping {int(ratio*100)}% (0 samples calculated)")
+                continue
             
-        valid_ratios.append(ratio)
-        X_sub = X_train[:n]
-        y_sub = y_train[:n]
+            valid_ratios.append(ratio)
+            X_sub = X_train[:n]
+            y_sub = y_train[:n]
         
-        print(f"Training on {n} samples ({int(ratio*100)}%)...")
+            print(f"Training on {n} samples ({int(ratio*100)}%)...")
 
-        for name, gp in models.items():
             try:
                 # We catch errors here so one failing model doesn't crash the whole loop
                 gp.fit(X_sub, y_sub, column_order)
