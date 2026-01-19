@@ -40,8 +40,9 @@ class Aggregator:
     def f(self, hull: Hull, budget: int = 200) -> Tuple[float, dict]:
         X_grid = np.linspace(0, np.pi, 180)
         
-        mx = (0, 0)
-        root = 0
+        mx = (0, 0) # Max val
+        root = (0, np.inf) # Actual tested root values
+        root_estimate = np.pi / 2 # Estimated root based on mu
         initial_stability = 0
         initial_buoyancy = 0
 
@@ -67,6 +68,7 @@ class Aggregator:
             r = np.random.random() * self.tot
             mu, varSigma = self.gp.predict(X_grid)
             budgets = {k: self.weights[k][1]/self.tot * budget for k in self.weights.keys()}
+            root_estimate = np.where(mu < 0)[0].item()
             
             while any(budget > 0 for budgets in budgets.values()):
                 for k in self.weights.keys():
@@ -84,9 +86,11 @@ class Aggregator:
                         case "tipping_point" if self.weights[k][0] <= r < self.weights[k][1]:
                             a = a_SC(mx[0], X_grid, mu, varSigma)
                             m = max(a)
-                            root = X_grid[np.where(a == m)[0].item()]
-                            sample = simulations.analytic.run(hull, simulations.Params(root))
-                            update(root, sample)
+                            x = X_grid[np.where(a == m)[0].item()]
+                            sample = simulations.analytic.run(hull, simulations.Params(x))
+                            y = sample.righting_moment_heel()
+                            update(x, sample)
+                            root = (x, y) if np.abs(y) < np.abs(root[1]) 
                             adjust_budgets(budgets, k, sample.cost)
                             
                         case "overall_stability" | "righting_energy" | "overall_buoyancy"\
@@ -94,8 +98,8 @@ class Aggregator:
                             bounds = (0,0)
                             moments = True
                             match k:
-                                case "overall_stability": bounds = (0, root)
-                                case "righting_energy": bounds = (root, np.pi)
+                                case "overall_stability": bounds = (0, root_estimate)
+                                case "righting_energy": bounds = (root_estimate, np.pi)
                                 case "overall_buoyancy":
                                     moments = False
                                     bounds = (0, np.pi)
@@ -118,8 +122,9 @@ class Aggregator:
                             simulations.analytic.run(hull, simulations.Params(x)).reserve_buoyancy
                             adjust_budgets(budgets, k, budgets[k])
 
-            overall_stability = sum(mu[np.where(X_grid < root)][:,0])*X_grid[1]
-            righting_energy = sum(mu[np.where(X_grid > root)][:,0])*X_grid[1]
+            # I use root_estimate here because, root may be wildly inaccurate for low budgets or when tipping point is not a priority
+            overall_stability = sum(mu[np.where(X_grid < root_estimate)][:,0])*X_grid[1]
+            righting_energy = sum(mu[np.where(X_grid > root_estimate)][:,0])*X_grid[1]
             overall_buoyancy = sum(mu[:,3])*X_grid[1]
             result = {
                 "overall_stability": overall_stability,
