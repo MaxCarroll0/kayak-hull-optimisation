@@ -48,7 +48,7 @@ class Aggregator:
 
         def update(x, sample):
             update_gp(self.gp,
-                      np.asarray([x if k = "heel" else hull.params[k] for k in column_order]),
+                      np.asarray([x if k == "heel" else hull.params[k] for k in self.column_order]),
                       np.asarray([np.asarray(sample.righting_moment).flatten(),
                                   sample.reserve_buoyancy,
                                   sample.reserve_buoyancy_hull]),
@@ -63,10 +63,10 @@ class Aggregator:
                     if self.weights[k2][0] >= self.weights[k][0]:
                         if not k2 == k: self.weights[k2][0] -= diff
                         self.weights[k2][1] -= diff
-            
+
+        mu, varSigma = self.gp.predict(X_grid)    
         while budget > 0:
             r = np.random.random() * self.tot
-            mu, varSigma = self.gp.predict(X_grid)
             budgets = {k: self.weights[k][1]/self.tot * budget for k in self.weights.keys()}
             root_estimate = np.where(mu < 0)[0].item()
             
@@ -90,7 +90,7 @@ class Aggregator:
                             sample = simulations.analytic.run(hull, simulations.Params(x))
                             y = sample.righting_moment_heel()
                             update(x, sample)
-                            root = (x, y) if np.abs(y) < np.abs(root[1]) 
+                            root = (x, y) if np.abs(y) < np.abs(root[1]) else root
                             adjust_budgets(budgets, k, sample.cost)
                             
                         case "overall_stability" | "righting_energy" | "overall_buoyancy"\
@@ -106,8 +106,8 @@ class Aggregator:
                             a = a_INT(bounds, X_grid, mu, varSigma, moments)
                             m = max(a)
                             x = X_grid[np.where(a == m)[0].item()]
-                            sample = simulations.analytic.run(hull, simulations.Params(root))
-                            update(root, sample)
+                            sample = simulations.analytic.run(hull, simulations.Params(x))
+                            update(x, sample)
                             adjust_budgets(budgets, k, sample.cost)
                             
                         case "initial_stability":
@@ -122,21 +122,21 @@ class Aggregator:
                             simulations.analytic.run(hull, simulations.Params(x)).reserve_buoyancy
                             adjust_budgets(budgets, k, budgets[k])
 
-            # I use root_estimate here because, root may be wildly inaccurate for low budgets or when tipping point is not a priority
-            overall_stability = sum(mu[np.where(X_grid < root_estimate)][:,0])*X_grid[1]
-            righting_energy = sum(mu[np.where(X_grid > root_estimate)][:,0])*X_grid[1]
-            overall_buoyancy = sum(mu[:,3])*X_grid[1]
-            result = {
-                "overall_stability": overall_stability,
-                "initial_stability": initial_stability,
-                "righting_energy": righting_energy,
-                "tipping_point": root,
-                "overall_buoyancy": overall_buoyancy,
-                "initial_buoyancy": initial_buoyancy
-            }
+        # I use root_estimate here because, root may be wildly inaccurate for low budgets or when tipping point is not a priority
+        overall_stability = sum(mu[np.where(X_grid < root_estimate)][:,0])*X_grid[1]
+        righting_energy = sum(mu[np.where(X_grid > root_estimate)][:,0])*X_grid[1]
+        overall_buoyancy = sum(mu[:,3])*X_grid[1]
+        result = {
+            "overall_stability": overall_stability,
+            "initial_stability": initial_stability,
+            "righting_energy": righting_energy,
+            "tipping_point": root,
+            "overall_buoyancy": overall_buoyancy,
+            "initial_buoyancy": initial_buoyancy
+        }
 
-            aggregate = 0
-            for k, norm in config.hyperparameters.weight_normalisers.items():
-                aggregate += result[k] / norm
-            return aggregate, result
+        aggregate = 0
+        for k, norm in config.hyperparameters.weight_normalisers.items():
+            aggregate += result[k] / norm
+        return aggregate, result
                         
