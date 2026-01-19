@@ -10,11 +10,11 @@ from sklearn.metrics import mean_squared_error
 
 def compare_models(
     models: Dict[str, GaussianProcessSurrogate],
-    X_train: np.ndarray,
-    y_train: np.ndarray,
-    X_test: np.ndarray,
-    y_test: np.ndarray,
-    column_order: List[str],
+    X_train: np.ndarray = None,
+    y_train: np.ndarray = None,
+    X_test: np.ndarray = None,
+    y_test: np.ndarray= None,
+    column_order: List[str]= None,
     ratios: List[float] = [0.2, 0.4, 0.6, 0.8, 1.0]
 ) -> None:
     """
@@ -28,7 +28,10 @@ def compare_models(
     
     for name, gp in models.items():
         for ratio in ratios:
-            n = int(len(X_train) * ratio)
+            if X_train:
+                n = int(len(X_train) * ratio)
+            else:
+                n = 0
         
             # Safety check for very small datasets
             if n < 1:
@@ -36,17 +39,19 @@ def compare_models(
                 continue
             
             valid_ratios.append(ratio)
-            X_sub = X_train[:n]
-            y_sub = y_train[:n]
+            if X_sub:
+                X_sub = X_train[:n]
+                y_sub = y_train[:n]
         
             print(f"Training on {n} samples ({int(ratio*100)}%)...")
 
             try:
                 # We catch errors here so one failing model doesn't crash the whole loop
-                gp.fit(X_sub, y_sub, column_order)
-                mu, _ = gp.predict(X_test)
-                rmse = np.sqrt(mean_squared_error(y_test, mu))
-                results[name].append(rmse)
+                if X_sub:
+                    gp.fit(X_sub, y_sub, column_order)
+                    mu, _ = gp.predict(X_test)
+                    rmse = np.sqrt(mean_squared_error(y_test, mu))
+                    results[name].append(rmse)
             except Exception as e:
                 print(f"  Err training {name}: {e}")
                 results[name].append(np.nan) # Append NaN to maintain list length
