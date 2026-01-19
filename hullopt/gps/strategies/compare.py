@@ -28,7 +28,7 @@ def compare_models(
     
     for name, gp in models.items():
         for ratio in ratios:
-            if X_train:
+            if X_train is not None:
                 n = int(len(X_train) * ratio)
             else:
                 n = 0
@@ -39,19 +39,17 @@ def compare_models(
                 continue
             
             valid_ratios.append(ratio)
-            if X_sub:
-                X_sub = X_train[:n]
-                y_sub = y_train[:n]
+            X_sub = X_train[:n]
+            y_sub = y_train[:n]
         
             print(f"Training on {n} samples ({int(ratio*100)}%)...")
 
             try:
                 # We catch errors here so one failing model doesn't crash the whole loop
-                if X_sub:
-                    gp.fit(X_sub, y_sub, column_order)
-                    mu, _ = gp.predict(X_test)
-                    rmse = np.sqrt(mean_squared_error(y_test, mu))
-                    results[name].append(rmse)
+                gp.fit(X_sub, y_sub, column_order)
+                mu, _ = gp.predict(X_test)
+                rmse = np.sqrt(mean_squared_error(y_test, mu))
+                results[name].append(rmse)
             except Exception as e:
                 print(f"  Err training {name}: {e}")
                 results[name].append(np.nan) # Append NaN to maintain list length
