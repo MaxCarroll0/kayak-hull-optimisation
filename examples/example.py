@@ -164,7 +164,8 @@ class GP_Result:
     initial_buoyancy: float
 
 user_weights = WeightSelector(GP_Result).run()
-
+time = user_weights["time"]
+del user_weights["time"]
 aggregator = Aggregator(user_weights, gp_righting, gp_buoyancy, column_order)
 f = aggregator.f
 
