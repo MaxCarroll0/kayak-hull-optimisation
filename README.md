@@ -4,7 +4,7 @@ Efficiently optimising a kayak hull under constant fluid flows for a customisabl
 ## User Interface
 ![alt text](image.png)
 
-## Method
+## Method (Note: outdated, refer to report)
 ### User Inputs
 - Hull Parameter Constraints
 - Forward Speed
