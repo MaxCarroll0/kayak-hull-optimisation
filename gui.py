@@ -62,7 +62,7 @@ class WeightSelector:
         """
         app = ctk.CTk()
         app.title(self.title_text)
-        app.geometry("600x500")
+        app.geometry("600x600") # Increased height slightly for new control
         
         app.grid_columnconfigure(0, weight=1)
         app.grid_rowconfigure(1, weight=1)
@@ -76,20 +76,48 @@ class WeightSelector:
         sub.pack(pady=(0, 5))
 
         scroll_frame = ctk.CTkScrollableFrame(app, label_text="Parameters")
-        scroll_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        scroll_frame.pack(fill="both", expand=True, padx=20, pady=(0, 10))
         
         for idx, param in enumerate(self.params):
             self._create_row(scroll_frame, param, idx)
-        self._create_row(scroll_frame, "Simulation Speed", len(self.params))
-        self.sliders["simulation_speed"] = ctk.IntVar(value=0)
 
+        # --- New Time Selection Section ---
+        time_frame = ctk.CTkFrame(app)
+        time_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        time_title = ctk.CTkLabel(time_frame, text="Time Limit (Minutes)", font=("Roboto", 14, "bold"))
+        time_title.pack(side="left", padx=20, pady=15)
+
+        self.time_var = ctk.IntVar(value=10) # Default value
+        
+        time_val_label = ctk.CTkLabel(time_frame, text=f"{self.time_var.get()}", width=30, font=("Roboto Mono", 14))
+        time_val_label.pack(side="right", padx=(10, 20), pady=15)
+
+        def update_time(value):
+            time_val_label.configure(text=f"{int(value)}")
+
+        time_slider = ctk.CTkSlider(
+            time_frame,
+            from_=1,
+            to=60,
+            number_of_steps=59,
+            variable=self.time_var,
+            command=update_time,
+            width=200
+        )
+        time_slider.pack(side="right", padx=10, pady=15)
+        # ----------------------------------
 
         def on_confirm():
             for param, var in self.sliders.items():
                 self.final_weights[param] = var.get()
+            
+            # Add time to final dictionary
+            self.final_weights["time"] = self.time_var.get()
+            
             app.destroy() 
 
-        btn = ctk.CTkButton(app, text="Confirm Weights", command=on_confirm, height=50, font=("Roboto", 16, "bold"))
+        btn = ctk.CTkButton(app, text="Confirm Configuration", command=on_confirm, height=50, font=("Roboto", 16, "bold"))
         btn.pack(fill="x", padx=20, pady=20)
 
         app.mainloop()
@@ -289,7 +317,8 @@ if __name__ == "__main__":
     liste = [1,2,3,4]
 
     asking_widget = WeightSelector(GP_Result).run()
-    print(asking_widget.keys())
+    print(f"Output Dictionary keys: {asking_widget.keys()}")
+    print(f"Output Dictionary: {asking_widget}")
     # Launch the visualizer
     visualizer = ResultVisualizer(optimal_params,  {"Speed":10,"Steerability": 2,"Druggability": 3}, final_score, MockHull)
     visualizer.run()
