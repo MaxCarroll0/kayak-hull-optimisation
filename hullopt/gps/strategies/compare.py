@@ -15,7 +15,8 @@ def compare_models(
     X_test: np.ndarray = None,
     y_test: np.ndarray= None,
     column_order: List[str]= None,
-    ratios: List[float] = [0.2, 0.4, 0.6, 0.8, 1.0]
+    ratios: List[float] = [0.2, 0.4, 0.6, 0.8, 1.0],
+    file_name: str = "gp_comparison_plot.png"
 ) -> None:
     """
     Trains multiple GP models on increasing subsets of data and plots the RMSE comparison.
@@ -74,7 +75,7 @@ def compare_models(
     plt.grid(True, alpha=0.3)
     plt.legend()
     
-    plot_path = "models/gp_comparison_plot.png"
+    plot_path = f"models/{file_name}"
     plt.savefig(plot_path)
     print(f"\nComparison plot saved to {plot_path}")
     plt.show()
