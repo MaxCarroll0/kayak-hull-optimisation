@@ -98,7 +98,7 @@ if not os.path.exists(DATA_PATH):
     
     from hullopt.simulations.params import Params
     from hullopt.simulations.analytic import run
-    hulls = generate_random_hulls(n=100, cockpit_opening=True, seed=42)
+    hulls = generate_random_hulls(n=10, cockpit_opening=True, seed=42)
     # Second step: We run a simulation for a given heel angle:
     for idx, hull in enumerate(hulls):
         print("Simulating random hull: " + str(idx))
@@ -132,7 +132,7 @@ else:
     gps = [GaussianProcessSurrogate(ConfigurablePhysicsKernel(KC), ZeroMeanPrior()) for KC in (KERNEL_CONFIG_HYDRO_PROD, KERNEL_CONFIG_HYDRO_SUM, KERNEL_CONFIG_HYDRO_PERIODIC, KERNEL_CONFIG_MATERN, KERNEL_CONFIG_RBF, KERNEL_CONFIG_LINEAR)]
     
     compare_models({"HYDRO_PROD": gps[0], "HYDRO_SUM": gps[1], "HYDRO_PERIODIC": gps[2], "MATERN": gps[3], "RBF": gps[4], "LINEAR": gps[5]},
-        X_train, y_train[:, :1], X_test, y_test[:, :1], column_order)
+        X_train, y_train[:, :1], X_test, y_test[:, :1], column_order, file_name="righting_gp_comparison_plot.png")
         
     gp_righting = gps[0]
     gp_righting.save(RIGHTING_MODEL_PATH)
@@ -147,7 +147,7 @@ else:
     gps = [GaussianProcessSurrogate(ConfigurablePhysicsKernel(KC), ZeroMeanPrior()) for KC in (KERNEL_CONFIG_HYDRO_PROD, KERNEL_CONFIG_HYDRO_SUM, KERNEL_CONFIG_HYDRO_PERIODIC, KERNEL_CONFIG_MATERN, KERNEL_CONFIG_RBF, KERNEL_CONFIG_LINEAR)]
     
     compare_models({"HYDRO_PROD": gps[0], "HYDRO_SUM": gps[1], "HYDRO_PERIODIC": gps[2], "MATERN": gps[3], "RBF": gps[4], "LINEAR": gps[5]},
-        X_train, y_train[:, -2:], X_test, y_test[:, -2:], column_order)
+        X_train, y_train[:, -2:], X_test, y_test[:, -2:], column_order, file_name="buoyancy_gp_comparison_plot.png")
         
     gp_buoyancy = gps[0]
     gp_buoyancy.save(BUOYANCY_MODEL_PATH)
