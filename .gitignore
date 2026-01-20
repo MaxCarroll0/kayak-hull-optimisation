@@ -2,6 +2,6 @@
 
 # Temporarily unilaterally ignore all artefacts
 *.pkl
-*.png
+# *.png
 
 *.log
