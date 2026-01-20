@@ -39,7 +39,6 @@ class Aggregator:
         self._weights_mut = None
         self._tot_mut = None
         print(self.weights)
-        print(self.tot)
         self.gp_righting = gp_righting
         self.gp_buoyancy = gp_buoyancy
         self.column_order = column_order
