@@ -38,7 +38,7 @@ class Aggregator:
         self.gp_buoyancy = gp_buoyancy
         self.column_order = column_order
 
-    def f(self, hull: Hull, budget: int = 300) -> Tuple[float, dict]:
+    def f(self, hull: Hull, budget: int = 180) -> Tuple[float, dict]:
         def add_hull_params(x):
             def f(k):
                 match k:
