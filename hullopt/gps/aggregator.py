@@ -142,7 +142,7 @@ class Aggregator:
         print(result)
         aggregate = 0
         for k, norm in config.hyperparameters.weight_normalisers.items():
-            aggregate += np.abs(result[k]) / norm
+            aggregate += np.abs(result[k]) * (self.weights[k][1] - self.weights[k][0]) / (norm * self.tot)
         print(aggregate)
         return aggregate, result
                         
