@@ -55,10 +55,10 @@ def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, cockpit: bool, dr
   if cockpit:
     water_box = trimesh.creation.box(bounds=[submerged.bounds[0] * 1.1, submerged.bounds[1] * [1.1,1.1,1]])
     # Calculate water/air meshes around the boat
-    water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh])
     pockets = water_diff.split()  # Get all pockets
     # Exactly ONE pocket corresponds to water, and it is the only pocket to contain points outside the submerged points
     air_pockets = [pocket for pocket in pockets if not pocket.contains([submerged.bounds[0]*1.05])[0]]
+  water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh], engine='blender') # NOTE: Must use blender for correct volume calculations (manifold3d is bugged)
 
   water_displaced = air_pockets + [submerged]
   # cob, buoyancy, hull_buoyancy

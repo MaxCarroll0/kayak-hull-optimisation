@@ -70,6 +70,8 @@ class Hull:
     inner_mesh.apply_translation([params.hull_thickness, 0, 0])
 
     # Create a hollow hull shell by subtracting inner from outer
+    # Note: Use Blender, manifold3d (or Trimesh's integration with it) has a bug in it's difference calculations forgetting to invert normals of the subtracting mesh
+    mesh = outer_mesh.difference(inner_mesh, engine="blender")
     # Add cockpit opening
     if params.cockpit_opening:
       mesh = add_cockpit_to_hull(
