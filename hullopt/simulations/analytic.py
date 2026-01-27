@@ -25,8 +25,6 @@ def _iterate_draught(mesh: Trimesh, hull_density: float) -> Tuple[int, float]:
   """
   def required_buoyancy(draught: float):
     _, displacement, _ = _calculate_centre_buoyancy_and_displacement(mesh, draught)
-    print(f"mesh volume {mesh.volume}, displacement {displacement}")
-    print(f"mesh watertight? {mesh.is_watertight}")
     return mesh.volume * hull_density - displacement
 
   lower = mesh.bounds[0][2] + 0.001 # 1mm buffer. TODO: switch to be in terms of draught_threshold
