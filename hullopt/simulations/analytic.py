@@ -113,7 +113,8 @@ def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   pockets = water_diff.split()  # Get all pockets
   # Exactly ONE pocket corresponds to water, and it is the only pocket to contain points outside the submerged points
   air_pockets = [pocket for pocket in pockets if not pocket.contains([submerged.bounds[0]*1.05])[0]]
-  water = [pocket for pocket in pockets if pocket.contains([submerged.bounds[0]*1.05])[0]][0]
+  water_pockets = [pocket for pocket in pockets if pocket.contains([submerged.bounds[0]*1.05])[0]]
+  water = water_pockets[0] if len(water_pockets) >= 1 else water_box
 
   water._visual.face_colors = [0,255,240,90]
   mesh._visual.face_colors = [255,0,0,255]
