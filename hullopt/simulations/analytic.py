@@ -123,6 +123,19 @@ def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   return trimesh.Scene([mesh, water] + air_pockets)
 
 def run(hull: Hull, params: Params, use_cache: bool = True) -> Result:
+  # temporary fix for weirdness in this range
+  if 1.5 < params.heel < 2.8:
+    res = run(hull, Params(-params.heel))
+    new_result = Result(
+      righting_moment=(-1*res.righting_moment_heel(), res.righting_moment_pitch(), res.righting_moment_yaw()),
+      reserve_buoyancy=res.reserve_buoyancy,
+      reserve_buoyancy_hull=res.reserve_buoyancy_hull,
+      cost=res.cost,
+      scene=res.scene)
+    if use_cache:
+        storage.store(new_result, params, hull)
+    return new_result
+  
   hull_density = hull.density
   T = trimesh.transformations.translation_matrix(hull.mesh.center_mass)
   mesh = hull.mesh.copy().apply_transform(T)
