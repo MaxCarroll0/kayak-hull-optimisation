@@ -18,20 +18,23 @@ from .storage import ResultStorage
 
 storage = ResultStorage()
 
-def _iterate_draught(mesh: Trimesh, cockpit: bool) -> Tuple[int, float]:
+def _iterate_draught(mesh: Trimesh, hull_density: float) -> Tuple[int, float]:
   """
   Iterate various water levels (draught) and calculate displacement.
   Returns the draught iterating until displacement = weight
   """
   def required_buoyancy(draught: float):
-    _, displacement, _ = _calculate_centre_buoyancy_and_displacement(mesh, cockpit, draught)
-    return mesh.mass - displacement
+    _, displacement, _ = _calculate_centre_buoyancy_and_displacement(mesh, draught)
+    print(f"mesh volume {mesh.volume}, displacement {displacement}")
+    print(f"mesh watertight? {mesh.is_watertight}")
+    return mesh.volume * hull_density - displacement
 
   lower = mesh.bounds[0][2] + 0.001 # 1mm buffer. TODO: switch to be in terms of draught_threshold
   upper = mesh.bounds[1][2] - 0.001
 
   if required_buoyancy(upper) > 0:
     # Hull sinks
+    print(f"SUNK: {required_buoyancy(upper)}")
     return 0, upper
   
   draught, draught_result = optimize.bisect(required_buoyancy,
@@ -44,21 +47,21 @@ def _iterate_draught(mesh: Trimesh, cockpit: bool) -> Tuple[int, float]:
                                   full_output=True)
   return draught_result.iterations, draught
 
-def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, cockpit: bool, draught: float) -> Tuple[Tuple[float, float, float], float, float]:
+def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, draught: float) -> Tuple[Tuple[float, float, float], float, float]:
   """
   Calculate the centre of buoyancy for a given draught level.
   i.e. The centre of mass of the water displaced by the submerged portion and its air pockets.
   """
   draught = np.asarray(draught).item() # scipy optimize may turn draught into a singleton vector
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
+
   air_pockets = []
-  if cockpit:
-    water_box = trimesh.creation.box(bounds=[submerged.bounds[0] * 1.1, submerged.bounds[1] * [1.1,1.1,1]])
-    # Calculate water/air meshes around the boat
-    pockets = water_diff.split()  # Get all pockets
-    # Exactly ONE pocket corresponds to water, and it is the only pocket to contain points outside the submerged points
-    air_pockets = [pocket for pocket in pockets if not pocket.contains([submerged.bounds[0]*1.05])[0]]
+  water_box = trimesh.creation.box(bounds=[submerged.bounds[0] * 1.1, submerged.bounds[1] * [1.1,1.1,1]])
+  # Calculate water/air meshes around the boat
   water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh], engine='blender') # NOTE: Must use blender for correct volume calculations (manifold3d is bugged)
+  pockets = water_diff.split()  # Get all pockets
+  # Exactly ONE pocket corresponds to water, and it is the only pocket to contain points outside the submerged points
+  air_pockets = [pocket for pocket in pockets if not pocket.contains([submerged.bounds[0]*1.05])[0]]
 
   water_displaced = air_pockets + [submerged]
   # cob, buoyancy, hull_buoyancy
@@ -67,21 +70,21 @@ def _calculate_centre_buoyancy_and_displacement(mesh: Trimesh, cockpit: bool, dr
     reduce(lambda acc, m: m.volume + acc, water_displaced, 0) * config.constants.water_density,\
     submerged.volume * config.constants.water_density
 
-def _calculate_righting_moment(mesh: Trimesh, cockpit: bool, draught: float) -> Tuple[float, float, float]:
-  cob, _, _ = _calculate_centre_buoyancy_and_displacement(mesh, cockpit, draught)
+def _calculate_righting_moment(mesh: Trimesh, hull_density: float, draught: float) -> Tuple[float, float, float]:
+  cob, _, _ = _calculate_centre_buoyancy_and_displacement(mesh, draught)
   righting_lever = cob - mesh.center_mass
-  gravity_force = mesh.mass * config.constants.gravity_on_earth * np.array([0,0,-1])
+  gravity_force = mesh.volume * hull_density * config.constants.gravity_on_earth * np.array([0,0,-1])
   righting_moment = np.cross(righting_lever, gravity_force)
   return tuple(righting_moment)
 
 def _compose(f, g):
     return lambda *a, **kw: f(g(*a, **kw))
 
-def _reserve_buoyancy(mesh: Trimesh, cockpit: bool, draught):
+def _reserve_buoyancy(mesh: Trimesh, hull_density: float, draught):
   lower = mesh.bounds[0][1]
   upper = mesh.bounds[1][2]
   f = _compose(lambda t: -t[1],
-              partial(_calculate_centre_buoyancy_and_displacement, mesh, True))
+              partial(_calculate_centre_buoyancy_and_displacement, mesh))
   brute_threshold = (upper-lower) * config.hyperparameters.draught_threshold * 100 # TODO parameterise
   ranges = [slice(draught,upper, (upper - draught)/2 if brute_threshold > upper - draught else brute_threshold)]
   best_draught = float(optimize.brute(f, ranges)[0])
@@ -93,32 +96,39 @@ def _reserve_buoyancy(mesh: Trimesh, cockpit: bool, draught):
                     'maxiter': config.hyperparameters.draught_max_iterations,
                     'xatol': config.hyperparameters.draught_threshold * (upper-lower),
                   }))
-  _, displacement, buoyancy_hull = _calculate_centre_buoyancy_and_displacement(mesh, cockpit, best_draught)
-  _, displacement2, buoyancy_hull2 = _calculate_centre_buoyancy_and_displacement(mesh, cockpit, result.x)
-  return len(ranges) + result.nit, max(displacement, displacement2) - mesh.mass, max(buoyancy_hull, buoyancy_hull2) - mesh.mass
+  _, displacement, buoyancy_hull = _calculate_centre_buoyancy_and_displacement(mesh, best_draught)
+  _, displacement2, buoyancy_hull2 = _calculate_centre_buoyancy_and_displacement(mesh, result.x)
+  return len(ranges) + result.nit, max(displacement, displacement2) - mesh.volume * hull_density, max(buoyancy_hull, buoyancy_hull2) - mesh.volume * hull_density
 
 def _scene_draught(mesh: Trimesh, draught: float) -> Scene:
   submerged = trimesh.intersections.slice_mesh_plane(mesh, [0,0,-1], [0,0,draught], cap=True)
-  water_box = trimesh.creation.box(bounds=[mesh.bounds[0] * 1.1, mesh.bounds[1] * [1.1,1.1,0] + [0,0,draught]])
-  water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh])
+
+  air_pockets = []
+  water_box = trimesh.creation.box(bounds=[submerged.bounds[0] * 1.1, submerged.bounds[1] * [1.1,1.1,1]])
+  # Calculate water/air meshes around the boat
+  water_diff: Trimesh = trimesh.boolean.difference([water_box, mesh], engine='blender') # Note: Must use blender to ensure correct volume calculations (manifold3d or it's integration in Trimesh is bugged)
   pockets = water_diff.split()  # Get all pockets
   # Exactly ONE pocket corresponds to water, and it is the only pocket to contain points outside the submerged points
-  water = next(pocket for pocket in pockets if pocket.contains([submerged.bounds[0]*1.05])[0])
+  air_pockets = [pocket for pocket in pockets if not pocket.contains([submerged.bounds[0]*1.05])[0]]
+  water = [pocket for pocket in pockets if pocket.contains([submerged.bounds[0]*1.05])[0]][0]
 
   water._visual.face_colors = [0,255,240,90]
   mesh._visual.face_colors = [255,0,0,255]
-  return trimesh.Scene([mesh, water])
+  for m in air_pockets:
+    m._visual.face_colors = [0, 250, 0, 90]
+  return trimesh.Scene([mesh, water] + air_pockets)
 
 def run(hull: Hull, params: Params, use_cache: bool = True) -> Result:
+  hull_density = hull.density
   T = trimesh.transformations.translation_matrix(hull.mesh.center_mass)
   mesh = hull.mesh.copy().apply_transform(T)
   R = trimesh.transformations.rotation_matrix(params.heel, [1,0,0], hull.mesh.center_mass)
   mesh.apply_transform(R)
-  iterations_draught, draught = _iterate_draught(mesh, hull.params.cockpit_opening)
+  iterations_draught, draught = _iterate_draught(mesh, hull_density)
   iterations_reserve_buoyancy, reserve_buoyancy, reserve_buoyancy_hull =\
-    _reserve_buoyancy(mesh, hull.params.cockpit_opening, draught)
+    _reserve_buoyancy(mesh, hull_density, draught)
   new_result = Result(
-        righting_moment=_calculate_righting_moment(mesh, hull.params.cockpit_opening, draught),
+        righting_moment=_calculate_righting_moment(mesh, hull_density, draught),
         reserve_buoyancy=float(reserve_buoyancy),
         reserve_buoyancy_hull=reserve_buoyancy_hull,
         scene=_scene_draught(mesh, draught),
