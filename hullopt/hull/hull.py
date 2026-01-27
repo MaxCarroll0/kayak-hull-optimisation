@@ -69,9 +69,29 @@ class Hull:
     # Shift mesh by hull thickness so inner hull lies directly in centre
     inner_mesh.apply_translation([params.hull_thickness, 0, 0])
 
+    # Apply rocker deformation
+    # NOTE: important to do this BEFORE boolean difference, as applying rocker obliterates the normals of the inner surface of the hull
+    outer_mesh = apply_rocker_to_hull(
+      outer_mesh,
+      length=params.length,
+      rocker_bow=params.rocker_bow,
+      rocker_stern=params.rocker_stern,
+      rocker_position=params.rocker_position,
+      rocker_exponent=params.rocker_exponent
+    )
+    inner_mesh = apply_rocker_to_hull(
+      inner_mesh,
+      length=params.length,
+      rocker_bow=params.rocker_bow,
+      rocker_stern=params.rocker_stern,
+      rocker_position=params.rocker_position,
+      rocker_exponent=params.rocker_exponent
+    )
+
     # Create a hollow hull shell by subtracting inner from outer
     # Note: Use Blender, manifold3d (or Trimesh's integration with it) has a bug in it's difference calculations forgetting to invert normals of the subtracting mesh
     mesh = outer_mesh.difference(inner_mesh, engine="blender")
+
     # Add cockpit opening
     if params.cockpit_opening:
       mesh = add_cockpit_to_hull(
@@ -81,21 +101,10 @@ class Hull:
         cockpit_width=params.cockpit_width,
         cockpit_position=params.cockpit_position
       )
-    
-    # Apply rocker deformation
-    mesh = apply_rocker_to_hull(
-      mesh,
-      length=params.length,
-      rocker_bow=params.rocker_bow,
-      rocker_stern=params.rocker_stern,
-      rocker_position=params.rocker_position,
-      rocker_exponent=params.rocker_exponent
-    )
-
+      
     # Center the mesh
     centroid = mesh.center_mass
     mesh.apply_translation([-centroid[0], -centroid[1], 0.0])
-
     return mesh
     
   def save_to_stl(self, filepath: str) -> None:
