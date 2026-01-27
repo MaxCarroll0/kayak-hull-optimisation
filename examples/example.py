@@ -98,13 +98,18 @@ if not os.path.exists(DATA_PATH):
     
     from hullopt.simulations.params import Params
     from hullopt.simulations.analytic import run
-    hulls = generate_random_hulls(n=10, cockpit_opening=True, seed=42)
+    hulls = generate_random_hulls(n=100, cockpit_opening=False, seed=42)
     # Second step: We run a simulation for a given heel angle:
     for idx, hull in enumerate(hulls):
         print("Simulating random hull: " + str(idx))
-        r = np.random.random()*62
+        for k in range(64):
+            heel = np.pi / 32 * k
+            print(f"heel: {heel}", end="\r")
+            run(hull, Params(heel=heel))
+        r = np.random.random()*35 # Add some extra random points
         for k in range(int(r)):
-            heel = np.random.random()*5*np.pi - 3*np.pi
+            heel = np.random.random()*2*np.pi
+            print(f"heel: {heel}\r", end="\r")
             result = run(hull, Params(heel=heel))
 
     
