@@ -32,9 +32,7 @@ class Hull:
       self.mesh.density = params.density
     
     # Calculate shell mass: surface area × thickness × material density
-    self.mass = self.mesh.area * self.hull_thickness * self.density
-    # Override mesh density so mesh.mass = volume * density equals our shell mass
-    self.mesh.density = self.mass / self.mesh.volume
+    self.mass = self.mesh.mass
 
     if not self.mesh.is_watertight:
       # We must have a watertight hull mesh
@@ -68,12 +66,10 @@ class Hull:
       type='inner'
     )
 
-    # Create a hollow hull shell by subtracting inner from outer
-    try:
-        mesh = outer_mesh.difference(inner_mesh, engine="manifold")
-    except Exception:
-        mesh = outer_mesh.difference(inner_mesh)
+    # Shift mesh by hull thickness so inner hull lies directly in centre
+    inner_mesh.apply_translation([params.hull_thickness, 0, 0])
 
+    # Create a hollow hull shell by subtracting inner from outer
     # Add cockpit opening
     if params.cockpit_opening:
       mesh = add_cockpit_to_hull(
