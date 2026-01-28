@@ -47,6 +47,7 @@ def update_gp(
         y_total = np.vstack([model.model.y, y_new_total]) if model.model.y is not None else y_new_total
         print(f"Fitting on {len(X_total)} samples")
         model.model.set_XY(X_total, y_total)
+        model.model.kern.constrain_bounded(1e-3, 1000.0, warning=False)
         model.model.optimize(messages=True)
         if X_test is not None and y_test is not None:
             mu, _ = model.predict(X_test)
