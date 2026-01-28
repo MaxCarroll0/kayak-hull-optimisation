@@ -29,7 +29,7 @@ def optimise(F, Constraint: Constraints, time=1) -> Params:
     
 
     # 970 kg/m^3 is typical for High-Density Polyethylene (HDPE) used in kayaks
-    FIXED_DENSITY = 970.0 
+    FIXED_DENSITY = 900.0 
     best_score = float('-inf')
     best_dict = {}
    
@@ -68,7 +68,7 @@ def optimise(F, Constraint: Constraints, time=1) -> Params:
             cockpit_length=p_c_len,
             cockpit_width=p_c_wid,
             cockpit_position=p_c_pos,
-            cockpit_opening=True
+            cockpit_opening=False
         )
         try:
             Constraint.check_hull(Hull(current_params))
@@ -115,7 +115,7 @@ def optimise(F, Constraint: Constraints, time=1) -> Params:
         cockpit_length=best_trial.params["cockpit_length"],
         cockpit_width=best_trial.params["cockpit_width"],
         cockpit_position=best_trial.params["cockpit_position"],
-        cockpit_opening=True
+        cockpit_opening=False
     )
     
     return best_params

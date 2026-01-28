@@ -275,7 +275,7 @@ if __name__ == "__main__":
         cockpit_length: float = 0.85
         cockpit_width: float = 0.45
         cockpit_position: float = 0.52
-        cockpit_opening: bool = True
+        cockpit_opening: bool = False
 
     class MockHull:
         """Mock Hull class to simulate the external dependency"""
