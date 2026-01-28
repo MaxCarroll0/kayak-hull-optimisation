@@ -43,8 +43,8 @@ def update_gp(
     try:
         # Exactly the logic from the loop (re-fitting with the new total set)
 
-        X_total = np.vstack([model.model.x, X_new_total]) if model.model.x is not None else X_new_total
-        y_total = np.vstack([model.model.y, y_new_total]) if model.model.y is not None else y_new_total
+        X_total = np.vstack([model.model.X, X_new_total]) if model.model.X is not None else X_new_total
+        y_total = np.vstack([model.model.Y, y_new_total]) if model.model.Y is not None else y_new_total
         print(f"Fitting on {len(X_total)} samples")
         model.model.set_XY(X_total, y_total)
         model.model.kern.constrain_bounded(1e-3, 1000.0, warning=False)
