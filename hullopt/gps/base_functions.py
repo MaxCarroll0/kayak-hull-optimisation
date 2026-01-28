@@ -43,15 +43,17 @@ def update_gp(
     try:
         # Exactly the logic from the loop (re-fitting with the new total set)
 
-        X_total = np.vstack([model.X_train, X_new_total]) if model.X_train is not None else X_new_total
-        y_total = np.vstack([model.y_train, y_new_total]) if model.y_train is not None else y_new_total
+        X_total = np.vstack([model.model.x, X_new_total]) if model.model.x is not None else X_new_total
+        y_total = np.vstack([model.model.y, y_new_total]) if model.model.y is not None else y_new_total
         print(f"Fitting on {len(X_total)} samples")
-        model.fit(X_total, y_total, column_order)
-        
+        model.model.set_XY(X_total, y_total)
+        model.model.optimize(messages=True)
         if X_test is not None and y_test is not None:
             mu, _ = model.predict(X_test)
             rmse = np.sqrt(mean_squared_error(y_test, mu))
             return rmse
+        
+
 
     except Exception as e:
         print(f"  Err updating model:")

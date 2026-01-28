@@ -132,6 +132,8 @@ if os.path.exists(RIGHTING_MODEL_PATH):
     print(f"Loading {RIGHTING_MODEL_PATH}...")
     with open(RIGHTING_MODEL_PATH, 'rb') as f:
         gp_righting = GaussianProcessSurrogate(model=pickle.load(f))
+        gp_righting.k_strat = ConfigurablePhysicsKernel(KERNEL_CONFIG_HYDRO_PROD)
+        gp_righting.p_strat = ZeroMeanPrior()
 else:
     print("Training Batch 1 (Righting)...")
     gps = [GaussianProcessSurrogate(ConfigurablePhysicsKernel(KC), ZeroMeanPrior()) for KC in (KERNEL_CONFIG_HYDRO_PROD, KERNEL_CONFIG_HYDRO_SUM, KERNEL_CONFIG_HYDRO_PERIODIC, KERNEL_CONFIG_MATERN, KERNEL_CONFIG_RBF, KERNEL_CONFIG_LINEAR)]

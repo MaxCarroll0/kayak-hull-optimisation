@@ -21,8 +21,7 @@ class GaussianProcessSurrogate:
         self.k_strat = kernel_strat
         self.p_strat = prior_strat
         self.model: Optional[GPy.models.GPRegression] = model
-        self.X_train: Optional[np.ndarray] = None
-        self.y_train: Optional[np.ndarray] = None
+
 
 
     def fit(self, X: np.ndarray, y: np.ndarray, column_order: List[str]) -> None:
@@ -33,9 +32,8 @@ class GaussianProcessSurrogate:
             print("Warning: Overwriting existing model.")
         input_dim = X.shape[1]
         
-        self.X_train = X
-        self.y_train = y
 
+        assert self.k_strat is not None, "Kernel strategy must be provided."
         if self.k_strat:
             kernel = self.k_strat.build(input_dim, column_order)
             mean_func = self.p_strat.get_mean_function(input_dim, output_dim=y.shape[1])
