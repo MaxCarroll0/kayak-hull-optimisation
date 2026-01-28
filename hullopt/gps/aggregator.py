@@ -111,9 +111,9 @@ class Aggregator:
                     break
 
             # TODO: WORK OUT HOW SURE EACH ACQUISITION FUNCTION IS ON ITS RESULT (to optimise by terminating early)
+            print(f"Sampling for: {k}")
             match k:
                 case "diminishing_stability":
-                    print("Sampling for: DIMINISHING STABILITY")
                     a = a_EI_max(mx[1], X_heels, mu_r, varSigma_r)
                     x = X_heels[np.argmax(a)]
                     sample = simulations.analytic.run(hull, simulations.Params(x))
@@ -122,7 +122,6 @@ class Aggregator:
                     adjust_budgets(budgets, k, sample.cost)
                             
                 case "tipping_point":
-                    print("Sampling for: TIPPING POINT")
                     # Look for roots only exceeding our estimate of diminishing stability location
                     # TODO: More principled proabilistic ways to determine root estimate and diminishing stability estimates.
                     a = a_SC(diminishing_stability_estimate, X_heels, mu_r, varSigma_r)
@@ -133,7 +132,6 @@ class Aggregator:
                     adjust_budgets(budgets, k, sample.cost)
                             
                 case "overall_stability" | "righting_energy" | "overall_buoyancy":
-                    print("Sampling for: OVERALL STABILITY / RIGHTING ENERGY / OVERALL BUOYANCY")
                     bounds = (0,0)
                     moments = True
                     match k:
