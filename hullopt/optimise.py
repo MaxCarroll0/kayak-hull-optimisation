@@ -65,8 +65,8 @@ def optimise(F, Constraint: Constraints, time=1) -> Params:
     def objective(trial):
 
         p_len = trial.suggest_float("length", *Constraint.length_range)
-        p_beam = trial.suggest_float("beam", *Constraint.beam_range)
-        p_depth = trial.suggest_float("depth", *Constraint.depth_range)
+        p_len_beam_ratio = trial.suggest_float("length_beam_ratio", *Constraint.length_to_beam_ratio_range)
+        p_beam_depth_ratio = trial.suggest_float("beam_depth_ratio", *Constraint.beam_to_depth_ratio_range)
         p_thick = trial.suggest_float("hull_thickness", *Constraint.hull_thickness_range)
         
         p_cs_exp = trial.suggest_float("cross_section_exponent", *Constraint.cross_section_exponent_range)
@@ -77,24 +77,24 @@ def optimise(F, Constraint: Constraints, time=1) -> Params:
         p_r_pos = trial.suggest_float("rocker_position", *Constraint.rocker_position_range)
         p_r_exp = trial.suggest_float("rocker_exponent", *Constraint.rocker_exponent_range)
         
-        p_c_len = trial.suggest_float("cockpit_length", *Constraint.cockpit_length_range)
-        p_c_wid = trial.suggest_float("cockpit_width", *Constraint.cockpit_width_range)
+        p_c_len_ratio = trial.suggest_float("cockpit_length_ratio", *Constraint.cockpit_length_ratio_range)
+        p_c_wid_ratio = trial.suggest_float("cockpit_width_ratio", *Constraint.cockpit_width_ratio_range)
         p_c_pos = trial.suggest_float("cockpit_position", *Constraint.cockpit_position_range)
 
-        current_params = Params(
+        current_params = Params.from_ratio_parameterisation(
             density=FIXED_DENSITY,
             hull_thickness=p_thick,
             length=p_len,
-            beam=p_beam,
-            depth=p_depth,
+            length_beam_ratio=p_len_beam_ratio,
+            beam_depth_ratio=p_beam_depth_ratio,
             cross_section_exponent=p_cs_exp,
             beam_position=p_beam_pos,
             rocker_bow=p_r_bow,
             rocker_stern=p_r_stern,
             rocker_position=p_r_pos,
             rocker_exponent=p_r_exp,
-            cockpit_length=p_c_len,
-            cockpit_width=p_c_wid,
+            cockpit_length_ratio=p_c_len_ratio,
+            cockpit_width_ratio=p_c_wid_ratio,
             cockpit_position=p_c_pos,
             cockpit_opening=False
         )
@@ -135,11 +135,11 @@ def optimise(F, Constraint: Constraints, time=1) -> Params:
     
     print(f"Optimization finished. Best Score: {best_trial.value}")
     
-    best_params = Params(
+    best_params = Params.from_ratio_parameterisation(
         density=FIXED_DENSITY,
         hull_thickness=best_trial.params["hull_thickness"],
-        length=best_trial.params["length"],
-        beam=best_trial.params["beam"],
+        length_beam_ratio=best_trial.params["length_beam_ratio"],
+        beam_depth_ratio=best_trial.params["beam_depth_ratio"],
         depth=best_trial.params["depth"],
         cross_section_exponent=best_trial.params["cross_section_exponent"],
         beam_position=best_trial.params["beam_position"],
@@ -147,8 +147,8 @@ def optimise(F, Constraint: Constraints, time=1) -> Params:
         rocker_stern=best_trial.params["rocker_stern"],
         rocker_position=best_trial.params["rocker_position"],
         rocker_exponent=best_trial.params["rocker_exponent"],
-        cockpit_length=best_trial.params["cockpit_length"],
-        cockpit_width=best_trial.params["cockpit_width"],
+        cockpit_length_ratio=best_trial.params["cockpit_length_ratio"],
+        cockpit_width_ratio=best_trial.params["cockpit_width_ratio"],
         cockpit_position=best_trial.params["cockpit_position"],
         cockpit_opening=False
     )
