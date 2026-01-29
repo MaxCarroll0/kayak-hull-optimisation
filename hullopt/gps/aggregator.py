@@ -176,6 +176,7 @@ class Aggregator:
                     adjust_budgets(budgets, k, budgets[k]) if varSigma_b[x][0] > 0 else mu_b[x]
 
             plt.ylim(1.1*min(mu_r[:,0] - 2*np.sqrt(varSigma_r[:,0])), 1.1*max(mu_r[:,0] + 2*np.sqrt(varSigma_r[:,0])))
+            plt.title(f"Acquiring for: {k}")
             plt.legend()
             if self.plotting: plt.show()
 
