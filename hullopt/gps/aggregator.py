@@ -48,7 +48,7 @@ class Aggregator:
         self.gp_buoyancy = gp_buoyancy
         self.column_order = column_order
 
-    def f(self, hull: Hull, budget: int = 200) -> Tuple[float, dict]:
+    def f(self, hull: Hull, budget: int = 160) -> Tuple[float, dict]:
         self._weights_mut = deepcopy(self.weights)
         self._tot_mut = self.tot
         def add_hull_params(x):
@@ -78,7 +78,8 @@ class Aggregator:
         # TODO: Avoid wasting simulations at 0 and pi, righting moment is definitionally equal to 0
         res1 = simulations.analytic.run(hull, simulations.Params(X_heels[1]))
         if res1.righting_moment_heel() < 0:
-            raise Exception("Bugged Hull? Negative Initial Stability.")
+            print("Warning: Bugged Hull? Negative Initial Stability.")
+            return -1, {}
         update([0, X_heels[1], np.pi], [simulations.analytic.run(hull, simulations.Params(0)), res1, simulations.analytic.run(hull, simulations.Params(np.pi))])
 
         def adjust_budgets(budgets, k, cost):
@@ -166,7 +167,7 @@ class Aggregator:
 
                 case "initial_stability":
                     x = X_heels[1]
-                    initial_stability = simulations.analytic.run(hull, simulations.Params(x)).righting_moment_heel() / x * 2 * np.pi if varSigma_r[x][0] > 0 else mu_r[x]
+                    initial_stability = simulations.analytic.run(hull, simulations.Params(x)).righting_moment_heel() / x * 2 * np.pi if varSigma_r[1][0] > 0 else mu_r[x][0]
                     adjust_budgets(budgets, k, budgets[k])
                             
                 case "initial_buoyancy":
