@@ -100,20 +100,20 @@ class Aggregator:
             mu_r, varSigma_r = self.gp_righting.predict(X_grid)
             mu_b, varSigma_b = self.gp_buoyancy.predict(X_grid)
 
-            root_estimate = X_heels[np.where(mu_r[1:-2]*mu_r[2:-1] < 0)[0][0]]
-            print(f"root estimate: {root_estimate}")
+            sign_changes = np.where(mu_r[1:-2]*mu_r[2:-1] < 0)[0]
+            root_estimate = X_heels[sign_changes[0]] if len(sign_changes) > 0 else np.pi
             diminishing_stability_estimate = X_heels[np.argmax(mu_r)]
 
             # Temporary plotting for visualisation
             plt.plot(X_heels, mu_r[:,0], label="μ")
-            plt.plot(X_heels, mu_r[:,0] + varSigma_r[:,0], label="μ")
-            plt.plot(X_heels, mu_r[:,0] - varSigma_r[:,0], label="μ")
+            plt.plot(X_heels, mu_r[:,0] + 2*np.sqrt(varSigma_r[:,0]), label="μ")
+            plt.plot(X_heels, mu_r[:,0] - 2*np.sqrt(varSigma_r[:,0]), label="μ")
             plt.fill_between(
                 X_heels,
-                mu_r[:,0] - varSigma_r[:,0],
-                mu_r[:,0] + varSigma_r[:,0],
+                mu_r[:,0] - 2*np.sqrt(varSigma_r)[:,0],
+                mu_r[:,0] + 2*np.sqrt(varSigma_r)[:,0],
                 alpha=0.3,
-                label="μ ± σ"
+                label="μ ± 2σ"
             )
             
             k = ""
@@ -128,14 +128,13 @@ class Aggregator:
             match k:
                 case "diminishing_stability":
                     a = a_EI_max(mx[1], X_heels, mu_r, varSigma_r)
-                    x = X_heels[np.random.choice(len(a), p=a/(a.sum() if a.sum() > 0 else 1))]
+                    x = X_heels[np.argmax(a)]
                     sample = simulations.analytic.run(hull, simulations.Params(x))
-                    mx = (x, sample.righting_moment_heel())
-                    update(mx[0], sample)
+                    mx = (x, max(sample.righting_moment_heel(), mx[1]))
+                    update([mx[0]], [sample])
                     adjust_budgets(budgets, k, sample.cost)
 
-                    plt.plot(X_heels, a/max(a)*max(mu_r[:,0] + varSigma_r[:,0]), label="EI Acquisition")
-                    
+                    plt.plot(X_heels, a/max(a)*max(mu_r[:,0] + 2*np.sqrt(varSigma_r[:,0])), label="EI Acquisition")
                 case "tipping_point":
                     # Look for roots only exceeding our estimate of diminishing stability location
                     # TODO: More principled proabilistic ways to determine root estimate and diminishing stability estimates.
@@ -143,10 +142,10 @@ class Aggregator:
                     x = X_heels[np.random.choice(len(a), p=a/(a.sum() if a.sum() > 0 else 1))]
                     sample = simulations.analytic.run(hull, simulations.Params(x))
                     y = sample.righting_moment_heel()
-                    update(x, sample)
+                    update([x], [sample])
                     adjust_budgets(budgets, k, sample.cost)
 
-                    plt.plot(X_heels, a/max(a)*max(mu_r[:,0] + varSigma_r[:,0]), label="Root Acquisition")
+                    plt.plot(X_heels, a/max(a)*max(mu_r[:,0] + 2*np.sqrt(varSigma_r[:,0])), label="Root Acquisition")
          
                 case "overall_stability" | "righting_energy" | "overall_buoyancy":
                     bounds = (0,0)
@@ -160,35 +159,35 @@ class Aggregator:
                     a = a_INT(bounds, X_heels, mu_r if moments else mu_b, varSigma_r if moments else varSigma_b)
                     x = X_heels[np.random.choice(len(a), p=a/(a.sum() if a.sum() > 0 else 1))]
                     sample = simulations.analytic.run(hull, simulations.Params(x))
-                    update(x, sample)
+                    update([x], [sample])
                     adjust_budgets(budgets, k, sample.cost)
 
-                    plt.plot(X_heels, a/max(a)*max(mu_r[:,0] + varSigma_r[:,0]), label="Variance Acquisition")
+                    plt.plot(X_heels, a/max(a)*max(mu_r[:,0] + 2*np.sqrt(varSigma_r[:,0])), label=f"Variance Acquisition ({k})")
 
                 case "initial_stability":
                     x = X_heels[1]
-                    initial_stability = mu_r[x][0] if varSigma_r[1][0] == 0 else \
-                        simulations.analytic.run(hull, simulations.Params(x)).righting_moment_heel()
+                    initial_stability = simulations.analytic.run(hull, simulations.Params(x)).righting_moment_heel() / x * 2 * np.pi if varSigma_r[x][0] > 0 else mu_r[x]
                     adjust_budgets(budgets, k, budgets[k])
                             
                 case "initial_buoyancy":
                     x = 0
-                    initial_buoyancy = mu_b[x][0] if varSigma_b[1][0] == 0 else \
-                        simulations.analytic.run(hull, simulations.Params(x)).reserve_buoyancy
-                    adjust_budgets(budgets, k, budgets[k])
+                    initial_buoyancy = simulations.analytic.run(hull, simulations.Params(x)).reserve_buoyancy
+                    adjust_budgets(budgets, k, budgets[k]) if varSigma_b[x][0] > 0 else mu_b[x]
+
+            plt.ylim(1.1*min(mu_r[:,0] - 2*np.sqrt(varSigma_r[:,0])), 1.1*max(mu_r[:,0] + 2*np.sqrt(varSigma_r[:,0])))
             plt.legend()
             if self.plotting: plt.show()
 
         # I use root_estimate here because, root may be wildly inaccurate for low budgets or when tipping point is not a priority
-        overall_stability = sum(mu_r[np.where(X_heels < root_estimate)][:,0])*X_heels[1]
-        righting_energy = sum(mu_r[np.where([2*np.pi - root_estimate >= x > root_estimate for x in X_heels])][:,0])*X_heels[1]
-        overall_buoyancy = sum(mu_b[:,0])*X_heels[1]
+        overall_stability = sum(mu_r[np.where(X_heels < root_estimate)][:,0]) * (X_heels[1] / root_estimate)
+        righting_energy = sum(mu_r[np.where([root_estimate <= x < np.pi for x in X_heels])][:,0]) * X_heels[1] / (np.pi - root_estimate)
+        overall_buoyancy = sum(mu_b[:,0]) / len(X_heel)
         result = {
-            "overall_stability": np.abs(overall_stability),
+            "overall_stability": max(overall_stability, 0),
             "initial_stability": initial_stability,
             "diminishing_stability": mx[1],
-            "righting_energy": -np.abs(righting_energy),
-            "tipping_point": root_estimate % np.pi,
+            "righting_energy": min(righting_energy, 0),
+            "tipping_point": root_estimate % (2 * np.pi),
             "overall_buoyancy": overall_buoyancy,
             "initial_buoyancy": initial_buoyancy
         }
