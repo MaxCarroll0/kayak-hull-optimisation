@@ -121,6 +121,7 @@ def plot_pickle(hull_index = 0):
                              scene = None)
           for d in data]
     print(f"Hull params: {seen[-1]}")
+    print(f"Column Order: {column_order}")
     print(f"{len(heels)} samples")
     plot_heels(heels, rs)
 

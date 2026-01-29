@@ -10,7 +10,7 @@ weight_normalisers = {
     "initial_stability": 1,
     "diminishing_stability": 1,
     "overall_buoyancy": 1,
-    "tipping_point": 1,
+    "tipping_point": 1.3865,
     "overall_buoyancy": 1,
     "initial_buoyancy": 1
 }

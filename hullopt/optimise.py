@@ -98,10 +98,11 @@ def optimise(F, Constraint: Constraints, time=1) -> Params:
             cockpit_position=p_c_pos,
             cockpit_opening=False
         )
+        print(f"Running Aggregator on: {current_params}")
         try:
             Constraint.check_hull(Hull(current_params))
         except ValueError:
-
+            print("Trial pruned: Constraints not met!")
             raise optuna.TrialPruned()
         import traceback
         try:

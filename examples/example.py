@@ -173,11 +173,13 @@ class GP_Result:
 user_weights = WeightSelector(GP_Result).run()
 time = user_weights["time"]
 del user_weights["time"]
-aggregator = Aggregator(user_weights, gp_righting, gp_buoyancy, column_order)
+aggregator = Aggregator(user_weights, gp_righting, gp_buoyancy, column_order, plot_n_steps=0)
 f = aggregator.f
-
 best_params = optimise(f, Constraints(), time=time)
-print("Optimised!!")
+print("Optimised!! Now Saving")
+
+gp_righting.save(RIGHTING_MODEL_PATH)
+gp_buoyancy.save(BUOYANCY_MODEL_PATH)
 
 visualizer = ResultVisualizer(best_params, hullopt.optimise.best_dict, hullopt.optimise.best_score, Hull)
 visualizer.run()
