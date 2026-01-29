@@ -66,16 +66,20 @@ class Aggregator:
         initial_stability = 0
         initial_buoyancy = 0
 
-        def update(x, sample, righting=True):
+        def update(xs, samples, righting=True):
             print("")
-            print(f"(Updating {'righting' if righting else 'buoyancy'} GP at: {x})")
+            print(f"(Updating {'righting' if righting else 'buoyancy'} GP at: {xs})")
             update_gp(self.gp_righting if righting else self.gp_buoyancy,
-                      np.asarray([[x if k == "heel" else (getattr(hull.params, k) if k != "cost" else 0) for k in self.column_order]]),
-                      np.asarray([sample.righting_moment_heel()]) if righting else\
-                      np.asarray([[sample.reserve_buoyancy, sample.reserve_buoyancy_hull]]),
+                      np.asarray([[x if k == "heel" else (getattr(hull.params, k) if k != "cost" else 0) for k in self.column_order] for x in xs]),
+                      np.asarray([[sample.righting_moment_heel()] for sample in samples]) if righting else\
+                      np.asarray([[sample.reserve_buoyancy, sample.reserve_buoyancy_hull] for sample in samples]),
                       self.column_order)
-        # Simulate at 0
-        update(0, simulations.analytic.run(hull, simulations.Params(0)))
+        # Simulate at 0, X_heels[1] and pi, these anchors help stability
+        # TODO: Avoid wasting simulations at 0 and pi, righting moment is definitionally equal to 0
+        res1 = simulations.analytic.run(hull, simulations.Params(X_heels[1]))
+        if res1.righting_moment_heel() < 0:
+            raise Exception("Bugged Hull? Negative Initial Stability.")
+        update([0, X_heels[1], np.pi], [simulations.analytic.run(hull, simulations.Params(0)), res1, simulations.analytic.run(hull, simulations.Params(np.pi))])
 
         def adjust_budgets(budgets, k, cost):
             budgets[k] -= cost
