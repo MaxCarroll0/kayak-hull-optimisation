@@ -42,6 +42,7 @@ class GaussianProcessSurrogate:
             self.model = GPy.models.GPRegression(X, y, kernel=kernel, mean_function=mean_func, normalizer=True)
         self.model.kern.constrain_bounded(1e-3, 1000.0, warning=False)
         self.model.optimize(messages=True)
+        assert self.model.X is not None
 
 
     def predict(self, X_new: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:

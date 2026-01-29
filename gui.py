@@ -46,7 +46,7 @@ class WeightSelector:
             
         slider = ctk.CTkSlider(
             parent, 
-            from_=0, 
+            from_=-10, 
             to=10, 
             number_of_steps=10, 
             variable=val_var, 
