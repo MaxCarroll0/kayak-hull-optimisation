@@ -181,8 +181,8 @@ class Aggregator:
             if self.plotting: plt.show()
 
         # I use root_estimate here because, root may be wildly inaccurate for low budgets or when tipping point is not a priority
-        overall_stability = sum(mu_r[np.where(X_heels < root_estimate)][:,0]) * (X_heels[1] / root_estimate)
-        righting_energy = sum(mu_r[np.where([root_estimate <= x < np.pi for x in X_heels])][:,0]) * X_heels[1] / (np.pi - root_estimate)
+        overall_stability = sum(mu_r[np.where(X_heels < root_estimate)][:,0]) * (X_heels[1] / (2*np.pi))
+        righting_energy = sum(mu_r[np.where([root_estimate <= x < np.pi for x in X_heels])][:,0]) * X_heels[1] / (2 * np.pi)
         overall_buoyancy = sum(mu_b[:,0]) / len(X_heels)
         result = {
             "overall_stability": max(overall_stability, 0),
