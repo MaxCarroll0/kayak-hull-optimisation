@@ -107,11 +107,11 @@ class Constraints:
       (self.beam_to_depth_ratio_range[0] <= beam_to_depth <= self.beam_to_depth_ratio_range[1],
        f'Beam/depth ratio {beam_to_depth:.2f} out of range {self.beam_to_depth_ratio_range}.\nHull is too {"deep and narrow" if beam_to_depth < self.beam_to_depth_ratio_range[0] else "wide and shallow"}.'),
       
-      (params.rocker_stern <= params.rocker_bow,
-       f'Rocker at stern ({params.rocker_stern:.3f}m) should not exceed rocker at bow ({params.rocker_bow:.3f}m).'),
+      # (params.rocker_stern <= params.rocker_bow,
+      #  f'Rocker at stern ({params.rocker_stern:.3f}m) should not exceed rocker at bow ({params.rocker_bow:.3f}m).'),
 
-       (abs(params.rocker_bow - params.rocker_stern) <= 0.05,
-        f'Rocker bow and stern difference {abs(params.rocker_bow - params.rocker_stern):.3f}m exceeds allowed tolerance of 0.05m.')
+      # (abs(params.rocker_bow - params.rocker_stern) <= 0.05,
+      #  f'Rocker bow and stern difference {abs(params.rocker_bow - params.rocker_stern):.3f}m exceeds allowed tolerance of 0.05m.')
     ]
     
     for check, err_msg in ratio_checks:
