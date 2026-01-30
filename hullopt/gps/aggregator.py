@@ -22,8 +22,9 @@ def a_EI_max(f_star, Xs, mu, varSigma):
 # 'Sign-change' acquisition to find roots
 # SC(x) = p(y = 0) i.e. for y ~ N(mu(x), varSigma(x))
 # Only consider if LARGER than point of diminishing stability (maximum)
-def a_SC(dim, Xs, mu, varSigma):
-    return np.asarray([norm.pdf(0, m[0], s[0]).item() if x > dim else 0 for (x, (m, s)) in zip(Xs, zip(mu, np.sqrt(varSigma)))])
+def a_SC(dim, ndim, Xs, mu, varSigma):
+    print(f"Dim guess: {dim}")
+    return np.asarray([norm.pdf(0, m[0], s[0]).item() if dim < x < ndim else 0 for (x, (m, s)) in zip(Xs, zip(mu, np.sqrt(varSigma)))])
 
 # Integrals
 # Maximum variance sampling (up to point)
@@ -105,6 +106,7 @@ class Aggregator:
             sign_changes = np.where(mu_r[1:-2]*mu_r[2:-1] < 0)[0]
             root_estimate = X_heels[sign_changes[0]] if len(sign_changes) > 0 else np.pi
             diminishing_stability_estimate = X_heels[np.argmax(mu_r)]
+            neg_diminishing_stability_estimate = X_heels[np.argmin(mu_r)]
 
             # Temporary plotting for visualisation
             plt.plot(X_heels, mu_r[:,0], label="μ")
@@ -140,7 +142,7 @@ class Aggregator:
                 case "tipping_point":
                     # Look for roots only exceeding our estimate of diminishing stability location
                     # TODO: More principled proabilistic ways to determine root estimate and diminishing stability estimates.
-                    a = a_SC(diminishing_stability_estimate, X_heels, mu_r, varSigma_r)
+                    a = a_SC(diminishing_stability_estimate, neg_diminishing_stability_estimate, X_heels, mu_r, varSigma_r)
                     x = X_heels[np.random.choice(len(a), p=a/(a.sum() if a.sum() > 0 else 1))]
                     sample = simulations.analytic.run(hull, simulations.Params(x))
                     y = sample.righting_moment_heel()
