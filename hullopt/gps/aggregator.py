@@ -35,10 +35,11 @@ class Aggregator:
     def __init__(self, user_weights, gp_righting: GaussianProcessSurrogate, gp_buoyancy: GaussianProcessSurrogate, column_order, plot_n_steps):
         self.plot_n_steps = plot_n_steps
         self.weights = {}
+        self.user_weights = user_weights
         tot = 0
         for k in user_weights.keys():
             prev_tot = tot
-            tot += user_weights[k]
+            tot += abs(user_weights[k])
             self.weights[k] = [prev_tot, tot]
         self.tot = tot
         self._weights_mut = None
@@ -198,7 +199,7 @@ class Aggregator:
         print(result)
         aggregate = 0
         for k, norm in config.hyperparameters.weight_normalisers.items():
-            aggregate += result[k] * (self.weights[k][1] - self.weights[k][0]) / (norm * self.tot)
+            aggregate += result[k] * (self.user_weights[k]) / (norm * self.tot)
         print(aggregate)
         return aggregate, result
                         

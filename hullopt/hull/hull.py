@@ -40,7 +40,7 @@ class Hull:
     
     # Check constraints
     Constraints().check_hull(self)
-    
+  
   @classmethod
   def from_mesh(cls, mesh: Trimesh):
     return cls(None, from_mesh=mesh)

@@ -6,8 +6,8 @@ class Constraints:
   def __init__(self,
               # Absolute parameter bounds
               length_range: tuple[float, float]=(1.5, 4.5), # Slightly widened for general use
-              beam_range: tuple[float, float]=(0.5, 0.9),
-              depth_range: tuple[float, float]=(0.20, 0.45),
+              # beam_range: tuple[float, float]=(0.5, 0.9),
+              # depth_range: tuple[float, float]=(0.20, 0.45),
               hull_thickness_range: tuple[float, float]=(0.002, 0.006),
               cross_section_exponent_range: tuple[float, float]=(1.5, 3.5),
               beam_position_range: tuple[float, float] = (0.40, 0.60),
@@ -16,8 +16,8 @@ class Constraints:
               rocker_position_range: tuple[float, float]=(0.35, 0.60),
               rocker_exponent_range: tuple[float, float]=(2.0, 4.0),
               # Cockpit parameter bounds (absolute - for validation only)
-              cockpit_length_range: tuple[float, float] = (0.40, 1.20),
-              cockpit_width_range: tuple[float, float] = (0.35, 0.55),
+              # cockpit_length_range: tuple[float, float] = (0.40, 1.20),
+              # cockpit_width_range: tuple[float, float] = (0.35, 0.55),
               cockpit_position_range: tuple[float, float] = (0.45, 0.55),
 
               # Cockpit scaling ratios (for generation)
@@ -37,8 +37,8 @@ class Constraints:
     """
     
     self.length_range = length_range
-    self.beam_range = beam_range
-    self.depth_range = depth_range
+    # self.beam_range = beam_range
+    # self.depth_range = depth_range
     self.hull_thickness_range = hull_thickness_range
     self.cross_section_exponent_range = cross_section_exponent_range
     self.beam_position_range = beam_position_range
@@ -48,8 +48,8 @@ class Constraints:
     self.rocker_exponent_range = rocker_exponent_range
     self.length_to_beam_ratio_range = length_to_beam_ratio_range
     self.beam_to_depth_ratio_range = beam_to_depth_ratio_range
-    self.cockpit_length_range = cockpit_length_range
-    self.cockpit_width_range = cockpit_width_range
+    # self.cockpit_length_range = cockpit_length_range
+    # self.cockpit_width_range = cockpit_width_range
     self.cockpit_position_range = cockpit_position_range
     self.cockpit_length_ratio_range = cockpit_length_ratio_range
     self.cockpit_width_ratio_range = cockpit_width_ratio_range
@@ -63,11 +63,11 @@ class Constraints:
       (self.length_range[0] <= params.length <= self.length_range[1], 
        f'Length {params.length} out of range {self.length_range}'),
 
-      (self.beam_range[0] <= params.beam <= self.beam_range[1], 
-       f'Beam {params.beam} out of range {self.beam_range}'),
+      # (self.beam_range[0] <= params.beam <= self.beam_range[1],
+      #  f'Beam {params.beam} out of range {self.beam_range}'),
 
-      (self.depth_range[0] <= params.depth <= self.depth_range[1], 
-       f'Depth {params.depth} out of range {self.depth_range}'),
+      # (self.depth_range[0] <= params.depth <= self.depth_range[1],
+      #  f'Depth {params.depth} out of range {self.depth_range}'),
 
       (self.hull_thickness_range[0] <= params.hull_thickness <= self.hull_thickness_range[1], 
        f'Hull thickness {params.hull_thickness} out of range {self.hull_thickness_range}'),
@@ -93,6 +93,7 @@ class Constraints:
 
     for check, err_msg in absolute_bounds:
       if not check:
+        print(f'Hull constraint violation: {err_msg}')
         raise ValueError(f'Hull constraint violation: {err_msg}')
       
     # Check ratio constraints
@@ -106,15 +107,16 @@ class Constraints:
       (self.beam_to_depth_ratio_range[0] <= beam_to_depth <= self.beam_to_depth_ratio_range[1],
        f'Beam/depth ratio {beam_to_depth:.2f} out of range {self.beam_to_depth_ratio_range}.\nHull is too {"deep and narrow" if beam_to_depth < self.beam_to_depth_ratio_range[0] else "wide and shallow"}.'),
       
-      (params.rocker_stern <= params.rocker_bow,
-       f'Rocker at stern ({params.rocker_stern:.3f}m) should not exceed rocker at bow ({params.rocker_bow:.3f}m).'),
+      # (params.rocker_stern <= params.rocker_bow,
+      #  f'Rocker at stern ({params.rocker_stern:.3f}m) should not exceed rocker at bow ({params.rocker_bow:.3f}m).'),
 
-       (abs(params.rocker_bow - params.rocker_stern) <= 0.05,
-        f'Rocker bow and stern difference {abs(params.rocker_bow - params.rocker_stern):.3f}m exceeds allowed tolerance of 0.05m.')
+      # (abs(params.rocker_bow - params.rocker_stern) <= 0.05,
+      #  f'Rocker bow and stern difference {abs(params.rocker_bow - params.rocker_stern):.3f}m exceeds allowed tolerance of 0.05m.')
     ]
     
     for check, err_msg in ratio_checks:
       if not check:
+        print(f'Hull constraint violation: {err_msg}')
         raise ValueError(f'Hull constraint violation: {err_msg}')
 
       

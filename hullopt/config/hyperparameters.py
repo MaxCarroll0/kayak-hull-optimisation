@@ -5,14 +5,13 @@ import numpy as np
 
 # Normalisation constants
 weight_normalisers = {
-    "overall_stability": 1,
-    "righting_energy": 1,
-    "initial_stability": 1,
-    "diminishing_stability": 1,
-    "overall_buoyancy": 1,
-    "tipping_point": 1.3865,
-    "overall_buoyancy": 1,
-    "initial_buoyancy": 1
+    "overall_stability": 24.1420,
+    "righting_energy": 24.1420,
+    "initial_stability": 2769.4008,
+    "diminishing_stability": 184.5134,
+    "tipping_point": 1.4041,
+    "overall_buoyancy": 801.7866,
+    "initial_buoyancy": 801.7866
 }
 
 # Analytic Simulator

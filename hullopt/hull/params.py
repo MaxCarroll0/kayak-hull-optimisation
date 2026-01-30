@@ -51,3 +51,22 @@ class Params:
     cockpit_width: float = 0.6
     cockpit_position: float = 0.5
     cockpit_opening: bool = False
+
+    # A better parameterisation that does not violate ratio constraints
+    @classmethod
+    def from_ratio_parameterisation(cls, density, hull_thickness, length, length_beam_ratio, beam_depth_ratio, cross_section_exponent, beam_position, rocker_bow, rocker_stern, rocker_position, rocker_exponent, cockpit_length_ratio, cockpit_width_ratio, cockpit_position, cockpit_opening):
+        return cls(density=density,
+                   hull_thickness=hull_thickness,
+                   length=length,
+                   beam=length/length_beam_ratio,
+                   depth=(length/length_beam_ratio)/beam_depth_ratio,
+                   cross_section_exponent=cross_section_exponent,
+                   beam_position=beam_position,
+                   rocker_bow=rocker_bow,
+                   rocker_stern=rocker_stern,
+                   rocker_position=rocker_position,
+                   rocker_exponent=rocker_exponent,
+                   cockpit_length=cockpit_length_ratio*length,
+                   cockpit_width=cockpit_width_ratio*length/length_beam_ratio,
+                   cockpit_position=cockpit_position,
+                   cockpit_opening=cockpit_opening)
